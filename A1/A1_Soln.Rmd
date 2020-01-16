@@ -1,0 +1,35 @@
+---
+title: "A1 Soln"
+author: "Xiangyu Kong"
+date: "15/01/2020"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+``` {r setup, include=FALSE, message=FALSE}
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, tidy=TRUE,
+                      tidy.opts=list(width.cutoff=60))
+```
+
+# Question 1
+
+## Read Data
+```{r data, echo=TRUE, tidy=TRUE}
+crimeShowFile = "crime_show_ratings.RDS"
+crimeData = readRDS(crimeShowFile)
+```
+
+## Question 1.a
+
+pass
+
+\newpage
+
+# Appendix
+
+```{r ref.label=knitr::all_labels(), echo = T, eval = F}
+```
