@@ -8,24 +8,154 @@ output:
     df_print: paged
 ---
 
-``` {r setup, include=FALSE, message=FALSE}
+```{r setup, include=FALSE, message=FALSE}
 library(tidyverse)
 
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, tidy=TRUE,
-                      tidy.opts=list(width.cutoff=60))
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 60)
+)
 ```
 
 # Question 1
 
 ## Read Data
-```{r data, echo=TRUE, tidy=TRUE}
-crimeShowFile = "crime_show_ratings.RDS"
-crimeData = readRDS(crimeShowFile)
+
+```{r 1_data}
+# Read the crime show ratings data
+crime_show_file = "crime_show_ratings.RDS"
+crime_show_data = readRDS(crime_show_file)
 ```
 
 ## Question 1.a
 
-pass
+Let $y_i$ denote season rating for sample $i$.
+
+Let $x_{i, 2000}$ be indicator variable that is set to 1 if the decade for the sample $i$ is 2000, 0 otherwise.
+
+Let $x_{i, 2010}$ be indicator variable that is set to 1 if the decade for the sample $i$ is 2010, 0 otherwise.
+
+Equation for linear model:
+
+$$
+y_{i} = \beta_0 + \beta_1 x_{i, 2000} + \beta_2 x_{i, 2010} + \epsilon_{i}
+$$
+
+Anova Assumptions:
+
+1. Errors ($\epsilon_i$) are independent
+2. Errors are normally distributed with $E[\epsilon_i] = 0$
+3. Errors have constant variance $var[\epsilon] = \sigma^2$
+
+
+## Question 1.b
+
+The hypotheses for ANOVA are listed and can be described as follows:
+
+- $H_0$: $\mu_{1990} = \mu_{2000} = \mu_{2010}$: 
+The mean season rating for crime shows are the same accross different decades. I.e. Different decades does not have effect over season ratings
+- $H_1$: at least one mean is different from the others:
+The mean season rating for crime shows are different accross different decades. I.e. Different decades has at least some effect over season ratings
+
+
+\newpage
+## Question 1.c
+
+```{r 1_c_boxplot}
+# Side by side box plots
+crime_show_data %>%
+  ggplot(aes(x = decade, y = season_rating)) +
+  geom_boxplot() +
+  ggtitle("Boxplots of average rating by decade for crime TV shows")
+```
+
+\newpage
+```{r 1_c_histogram}
+# Facetted histograms
+crime_show_data %>%
+  ggplot(aes(x = season_rating)) +
+  geom_histogram(bins = 20) +
+  facet_wrap(~ decade) +
+  ggtitle("Histograms of average rating by decade for crime TV shows")
+```
+
+The box plot provides a better visualization of the data because it shows comparison across three decades' basic statistics (maximum, minimum, quartiles, median) side by side. 
+
+On the other side, with the histograms, it is harder to tell which decade has a higher rating because it only provides visualization over frequencies within each decade, and provides a relatively poor visualization for comparing between different decades.
+
+One improvement for the box plot could be to cleaning the data before plotting. In the plot, we observe that there are some outliers, especially with 1990 and 2010. Removing those outliers may provide a even better visualization.
+
+Accoring to the box plot, we can see that the boxes are roughly on the same level. There is no sign of extremely skewed data except for some outliers, so their means are similar to the median (all around 8). Thus it does not suggest a signifficant difference between the means.
+
+
+\newpage
+## Question 1.d
+
+``` {r 1_d_one_way_anova}
+one_way_anova <- aov(season_rating ~ decade, data = crime_show_data)
+summary(one_way_anova)
+```
+
+From the one way anova we can see that the p-value for the F-test is 0.238. We can interpret this as: The probability of observing the current sample given the assumption that the three decades having the same mean season ratings  is 0.238.
+
+
+## Question 1.e
+
+``` {r 1_e_sd_plot}
+plot(one_way_anova, 1)
+```
+
+\newpage
+``` {r 1_e_plot_2}
+plot(one_way_anova, 2)
+
+crime_show_data %>%
+  group_by(decade) %>%
+  summarise(var_rating = sd(season_rating) ^ 2)
+```
+
+The first plot is the Residual vs Fitted plot. The plot shows that except for some ouliers, the residuals are roughly randomly scattered around the 0-line, and does not indicate any pattern. This shows that the data follows a linear relationship, have equal error variances, and have a few outliers.
+
+The second plot is the normal q-q plot. From the plot, we can see that except for points 19, 165, and 43, the points form a relatively straight line, indicating that the data follows a normal distribution with a few outliers.
+
+From the standard deviations, we calculate that the ratio of the largest within-group and biggest within-group variance estimate is $\dfrac{0.480}{0.203} = 2.365 < 3$. According to the rule of thumb from Dean and Voss, the assumption for equality of variances is satisfied.
+
+
+\newpage
+## Question 1.f
+
+``` {r 1_f_linear_model}
+lm1 = lm(season_rating ~ decade, data = crime_show_data)
+
+summary(lm1)
+```
+
+The linear model can be expressed as 
+
+$$
+y = \beta_0 + \beta_1 x_{2000} + \beta_2 x_{2010}
+$$
+
+where $y$ is the season rating, $\beta_i$s are the coefficients, $x_{2000}$ is the indicator variable for decade 2000, and $x_{2010}$ is the indicator variable for decade 2010.
+
+$\beta_0$ is the intercept of the regression line, which is equal to the sample mean for decade 1990.
+
+$\beta_1$ is the amount of score increase when the indicator variable $x_{2000}$ is set to 1.
+
+$\beta_2$ is the amount of score increase when the indicator variable $x_{2010}$ is set to 1.
+
+Then the sample mean for decade 1990 $\hat{\mu}_{1990} = \beta_0 = 7.9222$.
+
+The sample mean for decade 2000 $\hat{\mu}_{2000} = \beta_0 + \beta_1 = 7.9222 + 0.1368 = 8.059$.
+
+The sample mean for decade 2000 $\hat{\mu}_{2010} = \beta_0 + \beta_2 = 7.9222 + 0.1938 = 8.116$.
+
+
+# Question 2
+
+
 
 \newpage
 
