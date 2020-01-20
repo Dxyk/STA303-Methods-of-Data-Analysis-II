@@ -19,7 +19,9 @@ knitr::opts_chunk$set(
 )
 ```
 
+
 # Question 1
+
 
 ## Read Data
 
@@ -153,13 +155,95 @@ The sample mean for decade 2000 $\hat{\mu}_{2000} = \beta_0 + \beta_1 = 7.9222 +
 The sample mean for decade 2000 $\hat{\mu}_{2010} = \beta_0 + \beta_2 = 7.9222 + 0.1938 = 8.116$.
 
 
+\newpage
 # Question 2
 
 
+## Read Data
 
-\newpage
+```{r 2_data}
+# Read the crime show ratings data
+smokeFile = 'smokeDownload.RData'
+if (!file.exists(smokeFile)) {
+  download.file('http://pbrown.ca/teaching/303/data/smoke.RData',
+                smokeFile)
+}
+(load(smokeFile))
 
-# Appendix
+smokeFormats[smokeFormats[, 'colName'] == 'chewing_tobacco_snuff_or',
+             c('colName', 'label')]
 
-```{r ref.label=knitr::all_labels(), echo = T, eval = F}
+# get rid of 9, 10 year olds and missing age and race
+smokeSub = smoke[which(smoke$Age > 10 & !is.na(smoke$Race)),]
+smokeSub$ageC = smokeSub$Age - 16
+smokeModel = glm(
+  chewing_tobacco_snuff_or ~ ageC + RuralUrban + Race + Sex,
+  data = smokeSub,
+  family = binomial(link = 'logit')
+)
+knitr::kable(summary(smokeModel)$coef, digits = 3)
+
+logOddsMat = cbind(est = smokeModel$coef, confint(smokeModel, level = 0.99))
+oddsMat = exp(logOddsMat)
+oddsMat[1, ] = oddsMat[1, ] / (1 + oddsMat[1, ])
+rownames(oddsMat)[1] = 'Baseline prob'
+knitr::kable(oddsMat, digits = 3)
 ```
+
+
+## Question 2.a
+
+The statistical model that corresponds to `smokeModel` is 
+
+$$
+Y_{i} \sim Binomial(N_{i}, \mu_{i})
+$$
+$$
+h(\mu_i) = log(\frac{\mu_i}{1 - \mu_{i}}) = X^{T}_i \beta
+$$
+
+where
+
+- $\mu_{i}$ is the sample mean $E(Y_i)$
+- $N_{i}$ is the population size 
+<!-- TODO: what's N_i in this case?? -->
+- $h(\mu_{i})$ is the logit link function
+
+Within $X_{i}$, the variables are composed of age centered around 16 and indicator variables for Region (Rural / Urban), Race (Black, Hispanic, Asian, Native, Pacific), and Sex (Male, Female).
+
+
+## Question 2.b
+
+For the baseline prob row,
+
+- The value under est refers to the probability of observing the subset of individuals who are 16-year-old urban white males that have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days.
+- The value under $0.5\%$ and $99.5\%$ represents the $99\%$ confidence interval for the estimated probability
+
+
+## Question 2.c TODO
+``` {r 2_c_}
+newData = data.frame(
+  Sex = rep(c('M', 'F'), c(3, 2)),
+  Race = c('white', 'white', 'hispanic', 'black', 'asian'),
+  ageC = 0,
+  RuralUrban = rep(c('Rural', 'Urban'), c(1, 4))
+)
+
+smokePred = as.data.frame(predict(smokeModel, newData,
+                                  se.fit = TRUE, type = 'link'))[, 1:2]
+
+smokePred$lower = smokePred$fit - 3 * smokePred$se.fit
+smokePred$upper = smokePred$fit + 3 * smokePred$se.fit
+smokePred
+
+expSmokePred = exp(smokePred[, c('fit', 'lower', 'upper')])
+knitr::kable(cbind(newData[,-3], 1000 * expSmokePred / (1 + expSmokePred)),
+             digits = 1)
+```
+
+
+<!-- \newpage -->
+<!-- # Appendix -->
+
+<!-- ```{r ref.label=knitr::all_labels(), echo = T, eval = F} -->
+<!-- ``` -->
