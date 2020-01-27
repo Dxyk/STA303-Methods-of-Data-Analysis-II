@@ -57,9 +57,9 @@ Anova Assumptions:
 The hypotheses for ANOVA are listed and can be described as follows:
 
 - $H_0$: $\mu_{1990} = \mu_{2000} = \mu_{2010}$: 
-The mean season rating for crime shows are the same accross different decades. I.e. Different decades does not have effect over season ratings
+The mean season rating for crime shows are the same across different decades. I.e. Different decades does not have effect over season ratings
 - $H_1$: at least one mean is different from the others:
-The mean season rating for crime shows are different accross different decades. I.e. Different decades has at least some effect over season ratings
+The mean season rating for crime shows are different across different decades. I.e. Different decades has at least some effect over season ratings
 
 
 \newpage
@@ -89,7 +89,7 @@ On the other side, with the histograms, it is harder to tell which decade has a 
 
 One improvement for the box plot could be to cleaning the data before plotting. In the plot, we observe that there are some outliers, especially with 1990 and 2010. Removing those outliers may provide a even better visualization.
 
-Accoring to the box plot, we can see that the boxes are roughly on the same level. There is no sign of extremely skewed data except for some outliers, so their means are similar to the median (all around 8). Thus it does not suggest a signifficant difference between the means.
+According to the box plot, we can see that the boxes are roughly on the same level. There is no sign of extremely skewed data except for some outliers, so their means are similar to the median (all around 8). Thus it does not suggest a significant difference between the means.
 
 
 \newpage
@@ -97,6 +97,7 @@ Accoring to the box plot, we can see that the boxes are roughly on the same leve
 
 ``` {r 1_d_one_way_anova}
 one_way_anova <- aov(season_rating ~ decade, data = crime_show_data)
+
 summary(one_way_anova)
 ```
 
@@ -174,7 +175,7 @@ smokeFormats[smokeFormats[, 'colName'] == 'chewing_tobacco_snuff_or',
              c('colName', 'label')]
 
 # get rid of 9, 10 year olds and missing age and race
-smokeSub = smoke[which(smoke$Age > 10 & !is.na(smoke$Race)),]
+smokeSub = smoke[which(smoke$Age > 10 & !is.na(smoke$Race)), ]
 smokeSub$ageC = smokeSub$Age - 16
 smokeModel = glm(
   chewing_tobacco_snuff_or ~ ageC + RuralUrban + Race + Sex,
@@ -206,21 +207,21 @@ where
 
 - $\mu_{i}$ is the sample mean $E(Y_i)$
 - $N_{i}$ is the population size 
-<!-- TODO: what's N_i in this case?? -->
 - $h(\mu_{i})$ is the logit link function
 
-Within $X_{i}$, the variables are composed of age centered around 16 and indicator variables for Region (Rural / Urban), Race (Black, Hispanic, Asian, Native, Pacific), and Sex (Male, Female).
+Within $X_{i}$, there is an intercept of all 1's, a numeric variable of age centered around 16, and indicator variables for Region (Rural / Urban), Race (Black, Hispanic, Asian, Native, Pacific), and Sex (Male, Female).
 
 
 ## Question 2.b
 
 For the baseline prob row,
 
-- The value under est refers to the probability of observing the subset of individuals who are 16-year-old urban white males that have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days.
+- The value under `est` refers to the probability of observing the subset of individuals who are 16-year-old urban white males that have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days.
 - The value under $0.5\%$ and $99.5\%$ represents the $99\%$ confidence interval for the estimated probability
 
 
-## Question 2.c TODO
+## Question 2.c
+
 ``` {r 2_c_}
 newData = data.frame(
   Sex = rep(c('M', 'F'), c(3, 2)),
@@ -237,9 +238,107 @@ smokePred$upper = smokePred$fit + 3 * smokePred$se.fit
 smokePred
 
 expSmokePred = exp(smokePred[, c('fit', 'lower', 'upper')])
-knitr::kable(cbind(newData[,-3], 1000 * expSmokePred / (1 + expSmokePred)),
+knitr::kable(cbind(newData[, -3], 1000 * expSmokePred / (1 + expSmokePred)),
              digits = 1)
 ```
+
+The claim that rural white males are the group most likely to use
+chewing tobacco is likely to be true. This is because the confidence interval of rural white males do not overlap with any other group, and have the highest fit value.
+
+The claim that less than half of one percent of ethnic-minority urban
+women and girls chew tobacco can neither be confirmed or denied base on the data. Considering black and asian urban female, the fitted probability of them chewing tobacco is in $99\%$ confidence interval of $(0.13\%, 0.42\%)$ and $(0.08\%, 0.68\%)$. We can see that the $99\%$ confidence interval for black urban women is less than half of one percent. However, the $99\%$ confidence interval for asian urban women includes $0.5\%$ of its population. Thus we cannot conclude the claim is true.
+
+
+# Question 3
+
+
+## Read Data
+
+``` {r}
+fijiFile = 'fijiDownload.RData'
+if (!file.exists(fijiFile)) {
+  download.file('http://pbrown.ca/teaching/303/data/fiji.RData',
+                fijiFile)
+}
+(load(fijiFile))
+```
+
+``` {r}
+# get rid of newly married women and those with missing literacy status
+fijiSub = fiji[fiji$monthsSinceM > 0 & !is.na(fiji$literacy), ]
+fijiSub$logYears = log(fijiSub$monthsSinceM / 12)
+fijiSub$ageMarried = relevel(fijiSub$ageMarried, '15to18')
+fijiSub$urban = relevel(fijiSub$residence, 'rural')
+fijiRes = glm(
+  children ~ offset(logYears) + ageMarried + ethnicity + literacy + urban,
+  family = poisson(link = log),
+  data = fijiSub
+)
+logRateMat = cbind(est = fijiRes$coef, confint(fijiRes, level = 0.99))
+knitr::kable(cbind(summary(fijiRes)$coef,
+                   exp(logRateMat)),
+             digits = 3)
+```
+
+``` {r}
+fijiSub$marriedEarly = fijiSub$ageMarried == '0to15'
+fijiRes2 = glm(
+  children ~ offset(logYears) + marriedEarly + ethnicity + urban,
+  family = poisson(link = log),
+  data = fijiSub
+)
+logRateMat2 = cbind(est = fijiRes2$coef, confint(fijiRes2, level = 0.99))
+knitr::kable(cbind(summary(fijiRes2)$coef,
+                   exp(logRateMat2)),
+             digits = 3)
+```
+
+``` {r}
+lmtest::lrtest(fijiRes2, fijiRes)
+```
+
+
+## Question 3.a
+
+The statistical model that corresponds to `fijiRes` is 
+
+$$
+Y_{i} \sim Poisson(\lambda)
+$$
+$$
+h(\mu_{i}) = h(\lambda_{i}) = log(\frac{\lambda_{i}}{O_{i}}) = X^{T}_i \beta
+$$
+
+where
+
+- $\mu_{i}$ is the sample mean $E(Y_i)$
+- $O_{i}$ is the offset term, which is the number of months since married.
+- $h(\mu_{i})$ is the log link function
+
+Within $X_{i}$, there is an intercept of all 1's, and indicator variables for Age range of marriage (15-18, 0-15, 18-20, 0-22, 22-25, 25-30, 30+), ethnicity (Fijian, Indian, European, Part Eruopean, Pacific Islander, Routman, Chinese, Others) + literacy (Yes, No) + urban (Rural, Suva, Other Urban).
+
+The intercept represents predicted rates of children per month for the subset of females who are between 15 to 18 years old, Fijian, rural and literate.
+
+
+## Question 3.b
+
+The model `fijiRes2` is nested within `fijiRes`.
+
+<!-- TODO: what does it mean by constraints on the vector of regression coefficients \beta in the restricted model? -->
+`fijiRes2` can be viewed as `fijiRes` stripping ethnicity, and only retaining one age group indicator variable. The marriedEarly variable can simply be seen as the indicator variable for Age range of marriage 0-15. Thus the coefficients $\beta$ for `fijiRes2` will have 6 less rows and is a subset of the coefficients for `fijiRes`.
+
+
+## Question 3.c
+
+From the lmtest result above, we can see that the model being compared is `fijiRes2` and `fijiRes`.
+
+`fijiRes` takes into account for women of different ages and their literacy.
+
+`fijiRes2` is nested within `fijiRes`, and does not account for women of different ages above 15 years old, and their literacy.
+
+The p-value for the test is $0.3834$. This is not significant enough to reject the null hypothesis that adding literacy and age range improves how well the model explains the data.
+
+Thus the second claim is likely to be true.
 
 
 <!-- \newpage -->
