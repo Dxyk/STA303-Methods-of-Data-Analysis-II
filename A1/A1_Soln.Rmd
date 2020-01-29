@@ -14,7 +14,6 @@ library(tidyverse)
 knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE,
-  tidy = TRUE,
   tidy.opts = list(width.cutoff = 60)
 )
 ```
@@ -48,7 +47,7 @@ $$
 Anova Assumptions:
 
 1. Errors ($\epsilon_i$) are independent
-2. Errors are normally distributed with $E[\epsilon_i] = 0$
+2. Errors are Normally distributed with $E[\epsilon_i] = 0$
 3. Errors have constant variance $var[\epsilon] = \sigma^2$
 
 
@@ -56,10 +55,8 @@ Anova Assumptions:
 
 The hypotheses for ANOVA are listed and can be described as follows:
 
-- $H_0$: $\mu_{1990} = \mu_{2000} = \mu_{2010}$: 
-The mean season rating for crime shows are the same across different decades. I.e. Different decades does not have effect over season ratings
-- $H_1$: at least one mean is different from the others:
-The mean season rating for crime shows are different across different decades. I.e. Different decades has at least some effect over season ratings
+- $H_0$: The mean season rating for crime shows are the same across different decades. I.e. Different decades do not have effect on average season ratings
+- $H_1$: Across different decades, least one mean is different from the others: The mean season rating for crime shows are different across different decades. I.e. Different decades have at least some effect on average season ratings
 
 
 \newpage
@@ -85,9 +82,9 @@ crime_show_data %>%
 
 The box plot provides a better visualization of the data because it shows comparison across three decades' basic statistics (maximum, minimum, quartiles, median) side by side. 
 
-On the other side, with the histograms, it is harder to tell which decade has a higher rating because it only provides visualization over frequencies within each decade, and provides a relatively poor visualization for comparing between different decades.
+On the other side, with the histograms, it is harder to tell which decade has a higher average rating because it only provides visualization over frequencies within each decade, and provides a relatively poor visualization for comparing between different decades.
 
-One improvement for the box plot could be to cleaning the data before plotting. In the plot, we observe that there are some outliers, especially with 1990 and 2010. Removing those outliers may provide a even better visualization.
+One improvement for the box plot could be to sanitizing the data before plotting. In the plot, we observe that there are some outliers, especially with decades 1990 and 2010. Removing those outliers may provide a better visualization.
 
 According to the box plot, we can see that the boxes are roughly on the same level. There is no sign of extremely skewed data except for some outliers, so their means are similar to the median (all around 8). Thus it does not suggest a significant difference between the means.
 
@@ -96,44 +93,51 @@ According to the box plot, we can see that the boxes are roughly on the same lev
 ## Question 1.d
 
 ``` {r 1_d_one_way_anova}
+# one way anova
 one_way_anova <- aov(season_rating ~ decade, data = crime_show_data)
 
 summary(one_way_anova)
 ```
 
-From the one way anova we can see that the p-value for the F-test is 0.238. We can interpret this as: The probability of observing the current sample given the assumption that the three decades having the same mean season ratings  is 0.238.
+From the one way anova we can see that the p-value for the F-test is 0.238. We can interpret this as: The probability of observing the current sample given the assumption that the three decades having the same mean season ratings is 0.238. In this case, the p-value is not significant enough for us to reject $H_0$. Thus we cannot reject the statement that different decades do not have any effect on mean season ratings.
 
 
 ## Question 1.e
 
-``` {r 1_e_sd_plot}
+``` {r 1_e_plot_1}
+# first plot of one way anova
 plot(one_way_anova, 1)
 ```
 
 \newpage
 ``` {r 1_e_plot_2}
+# second plot for one way anova
 plot(one_way_anova, 2)
 
+# variance for different decades
 crime_show_data %>%
   group_by(decade) %>%
   summarise(var_rating = sd(season_rating) ^ 2)
 ```
 
-The first plot is the Residual vs Fitted plot. The plot shows that except for some ouliers, the residuals are roughly randomly scattered around the 0-line, and does not indicate any pattern. This shows that the data follows a linear relationship, have equal error variances, and have a few outliers.
+The first plot is the Residual vs Fitted plot. The plot shows that except for some ouliers, the residuals are roughly randomly scattered around the 0-line, and they do not indicate any pattern. This shows that the data follows a linear relationship, have equal error variances, and have a few outliers.
 
 The second plot is the normal q-q plot. From the plot, we can see that except for points 19, 165, and 43, the points form a relatively straight line, indicating that the data follows a normal distribution with a few outliers.
 
-From the standard deviations, we calculate that the ratio of the largest within-group and biggest within-group variance estimate is $\dfrac{0.480}{0.203} = 2.365 < 3$. According to the rule of thumb from Dean and Voss, the assumption for equality of variances is satisfied.
+From the standard deviations, we calculate that the ratio of the largest within-group and biggest within-group variance estimate is $\dfrac{\sigma_{1990}}{\sigma_{2000}} = \dfrac{0.480}{0.203} = 2.365 < 3$. According to the rule of thumb from Dean and Voss, the assumption for equality of variances is satisfied.
 
 
 \newpage
 ## Question 1.f
 
 ``` {r 1_f_linear_model}
-lm1 = lm(season_rating ~ decade, data = crime_show_data)
+# linear model
+lm_rating_decade = lm(season_rating ~ decade, data = crime_show_data)
 
-summary(lm1)
+summary(lm_rating_decade)
 ```
+
+<!-- TODO: is the linear model the same model as the ANOVA model? -->
 
 The linear model can be expressed as 
 
@@ -174,9 +178,11 @@ if (!file.exists(smokeFile)) {
 smokeFormats[smokeFormats[, 'colName'] == 'chewing_tobacco_snuff_or',
              c('colName', 'label')]
 
-# get rid of 9, 10 year olds and missing age and race
+# Data sanitization
 smokeSub = smoke[which(smoke$Age > 10 & !is.na(smoke$Race)), ]
 smokeSub$ageC = smokeSub$Age - 16
+
+# Poisson GLM
 smokeModel = glm(
   chewing_tobacco_snuff_or ~ ageC + RuralUrban + Race + Sex,
   data = smokeSub,
@@ -184,6 +190,7 @@ smokeModel = glm(
 )
 knitr::kable(summary(smokeModel)$coef, digits = 3)
 
+# odds table
 logOddsMat = cbind(est = smokeModel$coef, confint(smokeModel, level = 0.99))
 oddsMat = exp(logOddsMat)
 oddsMat[1, ] = oddsMat[1, ] / (1 + oddsMat[1, ])
@@ -214,7 +221,7 @@ Within $X_{i}$, there is an intercept of all 1's, a numeric variable of age cent
 
 ## Question 2.b
 
-For the baseline prob row,
+For the `Baseline prob` row,
 
 - The value under `est` refers to the probability of observing the subset of individuals who are 16-year-old urban white males that have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days.
 - The value under $0.5\%$ and $99.5\%$ represents the $99\%$ confidence interval for the estimated probability
@@ -222,7 +229,8 @@ For the baseline prob row,
 
 ## Question 2.c
 
-``` {r 2_c_}
+``` {r 2_c_prediction}
+# new data to predict
 newData = data.frame(
   Sex = rep(c('M', 'F'), c(3, 2)),
   Race = c('white', 'white', 'hispanic', 'black', 'asian'),
@@ -230,6 +238,7 @@ newData = data.frame(
   RuralUrban = rep(c('Rural', 'Urban'), c(1, 4))
 )
 
+# predicted data
 smokePred = as.data.frame(predict(smokeModel, newData,
                                   se.fit = TRUE, type = 'link'))[, 1:2]
 
@@ -237,16 +246,19 @@ smokePred$lower = smokePred$fit - 3 * smokePred$se.fit
 smokePred$upper = smokePred$fit + 3 * smokePred$se.fit
 smokePred
 
+# predicted odds
 expSmokePred = exp(smokePred[, c('fit', 'lower', 'upper')])
 knitr::kable(cbind(newData[, -3], 1000 * expSmokePred / (1 + expSmokePred)),
              digits = 1)
 ```
+<!-- TODO: are these logodds and odds? -->
 
 The claim that rural white males are the group most likely to use
-chewing tobacco is likely to be true. This is because the confidence interval of rural white males do not overlap with any other group, and have the highest fit value.
+chewing tobacco is likely to be true. This is because the fitted value for rural white male is the highest among all groups. Also, the confidence interval of rural white males do not overlap with that of any other group.
 
+<!-- TODO: do we simply disagree with the claim if there isnt enough evidence to support it? -->
 The claim that less than half of one percent of ethnic-minority urban
-women and girls chew tobacco can neither be confirmed or denied base on the data. Considering black and asian urban female, the fitted probability of them chewing tobacco is in $99\%$ confidence interval of $(0.13\%, 0.42\%)$ and $(0.08\%, 0.68\%)$. We can see that the $99\%$ confidence interval for black urban women is less than half of one percent. However, the $99\%$ confidence interval for asian urban women includes $0.5\%$ of its population. Thus we cannot conclude the claim is true.
+women and girls chew tobacco is likely to be faulse given the data. Considering black and asian urban female, the fitted probability of them chewing tobacco is in $99\%$ confidence interval of $(0.13\%, 0.42\%)$ and $(0.08\%, 0.68\%)$. We can see that the $99\%$ confidence interval for black urban women is less than half of one percent. However, the $99\%$ confidence interval for asian urban women includes $0.5\%$ of its population. Thus claim is false.
 
 
 # Question 3
@@ -254,7 +266,8 @@ women and girls chew tobacco can neither be confirmed or denied base on the data
 
 ## Read Data
 
-``` {r}
+``` {r 3_read_data}
+# Read the fiji data
 fijiFile = 'fijiDownload.RData'
 if (!file.exists(fijiFile)) {
   download.file('http://pbrown.ca/teaching/303/data/fiji.RData',
@@ -263,12 +276,16 @@ if (!file.exists(fijiFile)) {
 (load(fijiFile))
 ```
 
-``` {r}
-# get rid of newly married women and those with missing literacy status
+``` {r 3_data_sanitization}
+# data sanitization
 fijiSub = fiji[fiji$monthsSinceM > 0 & !is.na(fiji$literacy), ]
 fijiSub$logYears = log(fijiSub$monthsSinceM / 12)
 fijiSub$ageMarried = relevel(fijiSub$ageMarried, '15to18')
 fijiSub$urban = relevel(fijiSub$residence, 'rural')
+```
+
+``` {r 3_poisson_glm1}
+# first poisson glm
 fijiRes = glm(
   children ~ offset(logYears) + ageMarried + ethnicity + literacy + urban,
   family = poisson(link = log),
@@ -280,7 +297,8 @@ knitr::kable(cbind(summary(fijiRes)$coef,
              digits = 3)
 ```
 
-``` {r}
+``` {r 3_poisson_glm2}
+# second poisson glm
 fijiSub$marriedEarly = fijiSub$ageMarried == '0to15'
 fijiRes2 = glm(
   children ~ offset(logYears) + marriedEarly + ethnicity + urban,
@@ -293,7 +311,8 @@ knitr::kable(cbind(summary(fijiRes2)$coef,
              digits = 3)
 ```
 
-``` {r}
+``` {r 3_lrtest}
+# lrtest
 lmtest::lrtest(fijiRes2, fijiRes)
 ```
 
@@ -311,9 +330,9 @@ $$
 
 where
 
-- $\mu_{i}$ is the sample mean $E(Y_i)$
+- $\mu_{i}$ is the sample mean $E(Y_i)$.
 - $O_{i}$ is the offset term, which is the number of months since married.
-- $h(\mu_{i})$ is the log link function
+- $h(\mu_{i})$ is the log link function.
 
 Within $X_{i}$, there is an intercept of all 1's, and indicator variables for Age range of marriage (15-18, 0-15, 18-20, 0-22, 22-25, 25-30, 30+), ethnicity (Fijian, Indian, European, Part Eruopean, Pacific Islander, Routman, Chinese, Others) + literacy (Yes, No) + urban (Rural, Suva, Other Urban).
 
