@@ -38,6 +38,7 @@ Let $x_{i, 2000}$ be indicator variable that is set to 1 if the decade for the s
 
 Let $x_{i, 2010}$ be indicator variable that is set to 1 if the decade for the sample $i$ is 2010, 0 otherwise.
 
+
 Equation for linear model:
 
 $$
@@ -86,6 +87,8 @@ On the other side, with the histograms, it is harder to tell which decade has a 
 
 One improvement for the box plot could be to sanitizing the data before plotting. In the plot, we observe that there are some outliers, especially with decades 1990 and 2010. Removing those outliers may provide a better visualization.
 
+Another imporvement could be adding a geom dot of the mean for each decade to the box plot as in week4's lab. This is because boxplot only shows quartiles instead of means. Adding the mean to the plot gives a more precise observation.
+
 According to the box plot, we can see that the boxes are roughly on the same level. There is no sign of extremely skewed data except for some outliers, so their means are similar to the median (all around 8). Thus it does not suggest a significant difference between the means.
 
 
@@ -99,7 +102,7 @@ one_way_anova <- aov(season_rating ~ decade, data = crime_show_data)
 summary(one_way_anova)
 ```
 
-From the one way anova we can see that the p-value for the F-test is 0.238. We can interpret this as: The probability of observing the current sample given the assumption that the three decades having the same mean season ratings is 0.238. In this case, the p-value is not significant enough for us to reject $H_0$. Thus we cannot reject the statement that different decades do not have any effect on mean season ratings.
+From the one way anova we can see that the p-value for the F-test is 0.238. We can interpret this as: The probability of observing the current sample given the assumption that the three decades having the same mean season ratings is 0.238. Using an $\alpha$ value of $5\%$, the p-value is not significant enough for us to reject $H_0$. Thus we cannot reject the statement that different decades do not have any effect on mean season ratings.
 
 
 ## Question 1.e
@@ -124,7 +127,7 @@ The first plot is the Residual vs Fitted plot. The plot shows that except for so
 
 The second plot is the normal q-q plot. From the plot, we can see that except for points 19, 165, and 43, the points form a relatively straight line, indicating that the data follows a normal distribution with a few outliers.
 
-From the standard deviations, we calculate that the ratio of the largest within-group and biggest within-group variance estimate is $\dfrac{\sigma_{1990}}{\sigma_{2000}} = \dfrac{0.480}{0.203} = 2.365 < 3$. According to the rule of thumb from Dean and Voss, the assumption for equality of variances is satisfied.
+From the standard deviations, we calculate that the ratio of the largest within-group and biggest within-group variance estimate is $\dfrac{s^{2}_{max}}{s^{2}_{min}} = \dfrac{s^{2}_{1990}}{s^{2}_{2000}} = \dfrac{0.480}{0.203} = 2.365 < 3$. According to the rule of thumb from Dean and Voss, the assumption for equality of variances is satisfied.
 
 
 \newpage
@@ -137,7 +140,6 @@ lm_rating_decade = lm(season_rating ~ decade, data = crime_show_data)
 summary(lm_rating_decade)
 ```
 
-<!-- TODO: is the linear model the same model as the ANOVA model? -->
 
 The linear model can be expressed as 
 
@@ -147,11 +149,11 @@ $$
 
 where $y$ is the season rating, $\beta_i$s are the coefficients, $x_{2000}$ is the indicator variable for decade 2000, and $x_{2010}$ is the indicator variable for decade 2010.
 
-$\beta_0$ is the intercept of the regression line, which is equal to the sample mean for decade 1990.
+$\beta_0$ (`intercept`) is the intercept of the regression line, which is equal to the sample mean for decade 1990.
 
-$\beta_1$ is the amount of score increase when the indicator variable $x_{2000}$ is set to 1.
+$\beta_1$ (`decade2000`) is the amount of score increase when the indicator variable $x_{2000}$ is set to 1. I.e. the sample mean for decade 2000 will be $0.1368$ larger than that of decade 1990.
 
-$\beta_2$ is the amount of score increase when the indicator variable $x_{2010}$ is set to 1.
+$\beta_2$ (`decade2010`) is the amount of score increase when the indicator variable $x_{2010}$ is set to 1. I.e. the sample mean for decade 2010 will be $0.1368$ larger than that of decade 1990.
 
 Then the sample mean for decade 1990 $\hat{\mu}_{1990} = \beta_0 = 7.9222$.
 
@@ -177,30 +179,27 @@ if (!file.exists(smokeFile)) {
 
 smokeFormats[smokeFormats[, 'colName'] == 'chewing_tobacco_snuff_or',
              c('colName', 'label')]
+```
 
-# Data sanitization
+
+## Question 2.a
+
+``` {r 2_a_binomial_glm}
+# remove na values and unreasonable ages
 smokeSub = smoke[which(smoke$Age > 10 & !is.na(smoke$Race)), ]
+# center age around 16 years old
 smokeSub$ageC = smokeSub$Age - 16
 
-# Poisson GLM
+# binomial glm model
 smokeModel = glm(
   chewing_tobacco_snuff_or ~ ageC + RuralUrban + Race + Sex,
   data = smokeSub,
   family = binomial(link = 'logit')
 )
 knitr::kable(summary(smokeModel)$coef, digits = 3)
-
-# odds table
-logOddsMat = cbind(est = smokeModel$coef, confint(smokeModel, level = 0.99))
-oddsMat = exp(logOddsMat)
-oddsMat[1, ] = oddsMat[1, ] / (1 + oddsMat[1, ])
-rownames(oddsMat)[1] = 'Baseline prob'
-knitr::kable(oddsMat, digits = 3)
 ```
 
-
-## Question 2.a
-
+\newpage
 The statistical model that corresponds to `smokeModel` is 
 
 $$
@@ -212,14 +211,23 @@ $$
 
 where
 
-- $\mu_{i}$ is the sample mean $E(Y_i)$
-- $N_{i}$ is the population size 
-- $h(\mu_{i})$ is the logit link function
+- $Y_{i}$ is the number of people who has used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days.
+- $\mu_{i}$ is the probability of a single person used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days.
+- $N_{i}$ is the sample size for the people following the indicator variable assignment.
+- $h(\mu_{i})$ is the logit link function.
 
 Within $X_{i}$, there is an intercept of all 1's, a numeric variable of age centered around 16, and indicator variables for Region (Rural / Urban), Race (Black, Hispanic, Asian, Native, Pacific), and Sex (Male, Female).
 
 
 ## Question 2.b
+``` {r 2_b_odds_table}
+# odds table with 99% CI
+logOddsMat = cbind(est = smokeModel$coef, confint(smokeModel, level = 0.99))
+oddsMat = exp(logOddsMat)
+oddsMat[1, ] = oddsMat[1, ] / (1 + oddsMat[1, ])
+rownames(oddsMat)[1] = 'Baseline prob'
+knitr::kable(oddsMat, digits = 3)
+```
 
 For the `Baseline prob` row,
 
@@ -227,6 +235,7 @@ For the `Baseline prob` row,
 - The value under $0.5\%$ and $99.5\%$ represents the $99\%$ confidence interval for the estimated probability
 
 
+\newpage
 ## Question 2.c
 
 ``` {r 2_c_prediction}
@@ -251,16 +260,15 @@ expSmokePred = exp(smokePred[, c('fit', 'lower', 'upper')])
 knitr::kable(cbind(newData[, -3], 1000 * expSmokePred / (1 + expSmokePred)),
              digits = 1)
 ```
-<!-- TODO: are these logodds and odds? -->
 
 The claim that rural white males are the group most likely to use
 chewing tobacco is likely to be true. This is because the fitted value for rural white male is the highest among all groups. Also, the confidence interval of rural white males do not overlap with that of any other group.
 
-<!-- TODO: do we simply disagree with the claim if there isnt enough evidence to support it? -->
 The claim that less than half of one percent of ethnic-minority urban
-women and girls chew tobacco is likely to be faulse given the data. Considering black and asian urban female, the fitted probability of them chewing tobacco is in $99\%$ confidence interval of $(0.13\%, 0.42\%)$ and $(0.08\%, 0.68\%)$. We can see that the $99\%$ confidence interval for black urban women is less than half of one percent. However, the $99\%$ confidence interval for asian urban women includes $0.5\%$ of its population. Thus claim is false.
+women and girls chew tobacco is likely to be faulse given the data. Considering black and asian urban female, the fitted probability of them chewing tobacco is in $99\%$ confidence interval of $(0.13\%, 0.42\%)$ and $(0.08\%, 0.68\%)$. We can see that the $99\%$ confidence interval for black urban women is less than half of one percent. However, the $99\%$ confidence interval for asian urban women includes $0.5\%$ of its population. Thus claim only partially true.
 
 
+\newpage
 # Question 3
 
 
@@ -274,18 +282,25 @@ if (!file.exists(fijiFile)) {
                 fijiFile)
 }
 (load(fijiFile))
+glimpse(fiji)
 ```
 
 ``` {r 3_data_sanitization}
-# data sanitization
+# take only children after married and remove na.
 fijiSub = fiji[fiji$monthsSinceM > 0 & !is.na(fiji$literacy), ]
+
+# new variables
 fijiSub$logYears = log(fijiSub$monthsSinceM / 12)
 fijiSub$ageMarried = relevel(fijiSub$ageMarried, '15to18')
 fijiSub$urban = relevel(fijiSub$residence, 'rural')
 ```
 
-``` {r 3_poisson_glm1}
-# first poisson glm
+
+\newpage
+## Question 3.a
+
+``` {r 3_a_poisson_glm1}
+# full poisson glm model
 fijiRes = glm(
   children ~ offset(logYears) + ageMarried + ethnicity + literacy + urban,
   family = poisson(link = log),
@@ -296,28 +311,6 @@ knitr::kable(cbind(summary(fijiRes)$coef,
                    exp(logRateMat)),
              digits = 3)
 ```
-
-``` {r 3_poisson_glm2}
-# second poisson glm
-fijiSub$marriedEarly = fijiSub$ageMarried == '0to15'
-fijiRes2 = glm(
-  children ~ offset(logYears) + marriedEarly + ethnicity + urban,
-  family = poisson(link = log),
-  data = fijiSub
-)
-logRateMat2 = cbind(est = fijiRes2$coef, confint(fijiRes2, level = 0.99))
-knitr::kable(cbind(summary(fijiRes2)$coef,
-                   exp(logRateMat2)),
-             digits = 3)
-```
-
-``` {r 3_lrtest}
-# lrtest
-lmtest::lrtest(fijiRes2, fijiRes)
-```
-
-
-## Question 3.a
 
 The statistical model that corresponds to `fijiRes` is 
 
@@ -330,8 +323,9 @@ $$
 
 where
 
-- $\mu_{i}$ is the sample mean $E(Y_i)$.
-- $O_{i}$ is the offset term, which is the number of months since married.
+- $Y_{i}$ is the number of children.
+- $\mu_{i}$ is the sample mean $E(Y_i) = E(children)$.
+- $O_{i}$ is the offset term, which is the number of years since married.
 - $h(\mu_{i})$ is the log link function.
 
 Within $X_{i}$, there is an intercept of all 1's, and indicator variables for Age range of marriage (15-18, 0-15, 18-20, 0-22, 22-25, 25-30, 30+), ethnicity (Fijian, Indian, European, Part Eruopean, Pacific Islander, Routman, Chinese, Others) + literacy (Yes, No) + urban (Rural, Suva, Other Urban).
@@ -339,15 +333,37 @@ Within $X_{i}$, there is an intercept of all 1's, and indicator variables for Ag
 The intercept represents predicted rates of children per month for the subset of females who are between 15 to 18 years old, Fijian, rural and literate.
 
 
+\newpage
 ## Question 3.b
+
+``` {r 3_b_poisson_glm2}
+# nested poisson glm model
+fijiSub$marriedEarly = fijiSub$ageMarried == '0to15'
+fijiRes2 = glm(
+  children ~ offset(logYears) + marriedEarly + ethnicity + urban,
+  family = poisson(link = log),
+  data = fijiSub
+)
+logRateMat2 = cbind(est = fijiRes2$coef, confint(fijiRes2, level = 0.99))
+knitr::kable(cbind(summary(fijiRes2)$coef,
+                   exp(logRateMat2)),
+             digits = 3)
+```
 
 The model `fijiRes2` is nested within `fijiRes`.
 
-<!-- TODO: what does it mean by constraints on the vector of regression coefficients \beta in the restricted model? -->
-`fijiRes2` can be viewed as `fijiRes` stripping ethnicity, and only retaining one age group indicator variable. The marriedEarly variable can simply be seen as the indicator variable for Age range of marriage 0-15. Thus the coefficients $\beta$ for `fijiRes2` will have 6 less rows and is a subset of the coefficients for `fijiRes`.
+`fijiRes2` can be viewed as `fijiRes` stripping ethnicity, and only retaining one age group indicator variable. The marriedEarly variable can simply be seen as the indicator variable for Age range of marriage 0-15. 
+
+The constraint fot the restricted model is that the ages greater than 15 are combined together. All ages above 15 are considered as 1 for the dummy variable.
+
+Thus the coefficients $\beta$ for `fijiRes2` will have 6 less rows and is a subset of the coefficients for `fijiRes`.
 
 
+\newpage
 ## Question 3.c
+``` {r 3_c_lrtest}
+lmtest::lrtest(fijiRes2, fijiRes)
+```
 
 From the lmtest result above, we can see that the model being compared is `fijiRes2` and `fijiRes`.
 
@@ -357,7 +373,7 @@ From the lmtest result above, we can see that the model being compared is `fijiR
 
 The p-value for the test is $0.3834$. This is not significant enough to reject the null hypothesis that adding literacy and age range improves how well the model explains the data.
 
-Thus the second claim is likely to be true.
+Thus the first claim is likely to be false, and the second claim is likely to be true.
 
 
 <!-- \newpage -->
