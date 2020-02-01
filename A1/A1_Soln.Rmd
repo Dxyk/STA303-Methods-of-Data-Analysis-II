@@ -87,7 +87,7 @@ On the other side, with the histograms, it is harder to tell which decade has a 
 
 One improvement for the box plot could be to sanitizing the data before plotting. In the plot, we observe that there are some outliers, especially with decades 1990 and 2010. Removing those outliers may provide a better visualization.
 
-Another imporvement could be adding a geom dot of the mean for each decade to the box plot as in week4's lab. This is because boxplot only shows quartiles instead of means. Adding the mean to the plot gives a more precise observation.
+Another improvement could be adding a geom dot of the mean for each decade to the box plot as in week4's lab. This is because boxplot only shows quartiles instead of means. Adding the mean to the plot gives a more precise observation.
 
 According to the box plot, we can see that the boxes are roughly on the same level. There is no sign of extremely skewed data except for some outliers, so their means are similar to the median (all around 8). Thus it does not suggest a significant difference between the means.
 
@@ -265,7 +265,7 @@ The claim that rural white males are the group most likely to use
 chewing tobacco is likely to be true. This is because the fitted value for rural white male is the highest among all groups. Also, the confidence interval of rural white males do not overlap with that of any other group.
 
 The claim that less than half of one percent of ethnic-minority urban
-women and girls chew tobacco is likely to be faulse given the data. Considering black and asian urban female, the fitted probability of them chewing tobacco is in $99\%$ confidence interval of $(0.13\%, 0.42\%)$ and $(0.08\%, 0.68\%)$. We can see that the $99\%$ confidence interval for black urban women is less than half of one percent. However, the $99\%$ confidence interval for asian urban women includes $0.5\%$ of its population. Thus claim only partially true.
+women and girls chew tobacco is likely to be false given the data. Considering black and asian urban female, the fitted probability of them chewing tobacco is in $99\%$ confidence interval of $(0.13\%, 0.42\%)$ and $(0.08\%, 0.68\%)$. We can see that the $99\%$ confidence interval for black urban women is less than half of one percent. However, the $99\%$ confidence interval for asian urban women includes $0.5\%$ of its population. Thus claim only partially true.
 
 
 \newpage
@@ -328,7 +328,7 @@ where
 - $O_{i}$ is the offset term, which is the number of years since married.
 - $h(\mu_{i})$ is the log link function.
 
-Within $X_{i}$, there is an intercept of all 1's, and indicator variables for Age range of marriage (15-18, 0-15, 18-20, 0-22, 22-25, 25-30, 30+), ethnicity (Fijian, Indian, European, Part Eruopean, Pacific Islander, Routman, Chinese, Others) + literacy (Yes, No) + urban (Rural, Suva, Other Urban).
+Within $X_{i}$, there is an intercept of all 1's, and indicator variables for Age range of marriage (15-18, 0-15, 18-20, 0-22, 22-25, 25-30, 30+), ethnicity (Fijian, Indian, European, Part European, Pacific Islander, Routman, Chinese, Others) + literacy (Yes, No) + urban (Rural, Suva, Other Urban).
 
 The intercept represents predicted rates of children per month for the subset of females who are between 15 to 18 years old, Fijian, rural and literate.
 
@@ -352,9 +352,9 @@ knitr::kable(cbind(summary(fijiRes2)$coef,
 
 The model `fijiRes2` is nested within `fijiRes`.
 
-`fijiRes2` can be viewed as `fijiRes` stripping ethnicity, and only retaining one age group indicator variable. The marriedEarly variable can simply be seen as the indicator variable for Age range of marriage 0-15. 
+`fijiRes2` can be viewed as `fijiRes` stripping ethnicity, and only retaining one age group indicator variable. The `marriedEarly` variable can simply be seen as the indicator variable for Age range of marriage 0-15. 
 
-The constraint fot the restricted model is that the ages greater than 15 are combined together. All ages above 15 are considered as 1 for the dummy variable.
+The constraint for the restricted model is that the ages greater than 15 are combined together. All ages above 15 are considered as 1 for the dummy variable.
 
 Thus the coefficients $\beta$ for `fijiRes2` will have 6 less rows and is a subset of the coefficients for `fijiRes`.
 
