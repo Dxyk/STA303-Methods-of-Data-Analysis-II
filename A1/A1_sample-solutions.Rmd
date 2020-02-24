@@ -1,0 +1,358 @@
+---
+title: "STA303 A1 Sample Solutions"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+
+Libraries used:
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+# Question 1: ANOVA as a linear model
+
+A random sample of 55 crime shows was taken from each decade (1990s, 2000s, 2010s). The following variables are provided in `crime_show_ratings.RDS`:
+
+| Variable      | Description                                            |
+|---------------|--------------------------------------------------------|
+| season_number | Season of show                                         |
+| title         | Name of show                                           |
+| season_rating | Average rating of episodes in the given season         |
+| decade        | Decade this season is from (1990s, 2000s, 2010s)       |
+| genres        | Genres this shows is part of                           |
+
+**Question of interest: We want to know if the average season rating for crime shows is the same decade to decade.**
+
+## Question 1a
+
+Write the equation for a linear model that would help us answer our question of interest AND state the assumptions for the ANOVA.
+
+**soln**  
+
+***Linear model***
+
+$$\mu_i = \mu_{1990} + \beta_1\cdot d_{2000i} + \beta_2\cdot d_{2010i}$$
+Where $\beta_1 = \mu_{2000} - \mu_{1990}$ and $\beta_2 = \mu_{2010} - \mu_{1990}$ and $\mu_i$ is the mean season rating for the $i^{th}$ decade.
+
+Alternative but equivalent expressions also acceptable. 
+
+***Assumptions***
+
+Let $\epsilon_i$ be the difference between the observed value of a season's rating and the group mean for the decade that season was in.  Our assumptions for ANOVA are:  
+1. All $\epsilon_i$ are independent.  
+2. Errors are normally distributed with $E[\epsilon_i]=0$.  
+3. Constant variance (homoscedasticity), $var[\epsilon_i] = \sigma^2$.  
+
+**soln ends**
+
+## Question 1b
+
+Write the hypotheses for an ANOVA for the question of interest in words. Make it specific to this context and question.
+
+**soln**
+$$H_0: \text{the average season rating of crime shows is the same in the 1990s, 2000s and 2010s}$$
+$$H_1: \text{at least one decade's mean season rating for crime shows is different from the others} $$
+**soln ends**
+
+## Question 1c
+
+Make two plots, side-by-side boxplots and faceted histograms, of the season ratings for each decade. Briefly comment on which you prefer in this case and one way you might improve this plot (you don't have to make that improvement, just briefly describe it). Based on these plots, do you think there will be a significant difference between any of the means?
+
+```{r Q1c}
+# load crimeshow data
+# (have the .RDS downloaded to the same location your assignment .Rmd is saved)
+crime_show_data <- readRDS("crime_show_ratings.RDS")
+
+# Side by side box plots
+crime_show_data %>%
+  ggplot(aes(x = decade, y = season_rating)) +
+  geom_boxplot() +
+  ggtitle("Boxplots of average rating by decade for crime TV shows")
+
+# Facetted histograms
+crime_show_data %>%
+  ggplot(aes(x = season_rating)) +
+  geom_histogram(bins = 20) +
+  facet_wrap( ~ decade) +
+  ggtitle("Histograms of average rating by decade for crime TV shows")
+```
+
+**soln**
+
+You can prefer either plot if you give a reason, though I suspect most would prefer the boxplots as they give a quicker way to consider variability through the IQR and range. Alternatively, you may prefer the histograms as it may be easier to estimate and compare the means from the histograms. Adding a point/line for the mean of each group would be a good improvement. Though other sensible improvements also acceptable (adding points with jitter to box plot, more bins for histogram)
+
+I would guess the means are probably too similar compared to the variation in each group for me to expect to see a significant difference between any of them.
+
+**soln ends**
+
+## Question 1d
+
+Conduct a one-way ANOVA to answer the question of interest above. Show the results of `summary()` on your ANOVA and briefly interpret the results in context (i.e., with respect to our question of interest).
+
+**soln**
+
+```{r Q1d}
+anova1 <- aov(season_rating ~ decade, data = crime_show_data)
+summary(anova1)
+```
+
+The p-value of 0.238 means that we have no evidence against the null hypothesis that all the decade mean ratings for crime shows are the same.
+
+**soln ends**
+
+## Question 1e
+
+Update the code below to create two plots and the standard deviation of season rating by decade. Briefly comment on what each plot/output tells you about the assumptions for conducting an ANOVA with this data.
+
+**Note**: there are specific tests for equality of variances, but for the purposes of this course we will just consider a rule of thumb from Dean and Voss (*Design and Analysis of Experiments*, 1999, page 112): if the ratio of the largest within-in group variance estimate to the smallest within-group variance estimate does not exceed 3,  $s^2_{max}/s^2_{min}<3$ , the assumption is probably satisfied. 
+
+ **soln**
+ 
+```{r Q1e}
+# sample sol
+plot(anova1, 1)
+plot(anova1, 2)
+
+crime_show_data %>%
+  group_by(decade) %>%
+  summarise(var_rating = sd(season_rating) ^ 2)
+```
+
+Plot 1 shows the residuals of the model against the fitted values and plot 2 shows the residuals (standardised) against a theoretical normal distribution of residuals. The residuals for each group are roughly centered around zero and appear to be fairly normal, though with some outliers (observations 19 and 165 as seen in plot 2). ANOVA is robust to departures from normality. The largest within-group variance is 2.36 times larger than the smallest, so by our rule of thumb the variances are roughly equivalent.
+
+ **soln ends**
+
+## Question 1f
+
+Conduct a linear model based on the question of interest. Show the result of running `summary()` on your linear model. Interpret the coefficients from this linear model in terms of the mean season ratings for each decade. From these coefficients, calculate the observed group means for each decade, i.e., $\hat\mu_{1990s}$,  $\hat\mu_{2000s}$, and  $\hat\mu_{2010s}$
+
+**soln**
+
+```{r Q1f}
+lm1 <- lm(season_rating ~ decade, data = crime_show_data)
+summary(lm1)
+```
+
+The intercept of 7.92 represents our observed group mean for the 1990s while the other coefficients represent the difference between the group means for the 2000s and 2010s respectively, and the 1990s.
+
+$$\hat\mu_{1990s} = 7.92$$
+$$\hat\mu_{2000s} = 7.92 + 0.14 = 8.06$$
+$$\hat\mu_{2010s} = 7.92 + 0.19 = 8.11$$
+
+**soln ends**
+
+\newpage
+# Question 2: Generalised linear models - Binary
+
+
+Data from the 2014 American 
+[National Youth Tobacco
+Survey](http://www.cdc.gov/tobacco/data_statistics/surveys/nyts/index.htm) is available
+on [http://pbrown.ca/teaching/303/data](http://pbrown.ca/teaching/303/data), where there
+is an R version of the 2014 dataset `smoke.RData`, a pdf documentation file 
+`2014-Codebook.pdf`, and the code used to create the R version of the data
+`smokingData.R`.
+
+
+You can obtain the data with:
+
+```{r data, echo=TRUE, tidy=TRUE}
+smokeFile = 'smokeDownload.RData'
+if (!file.exists(smokeFile)) {
+  download.file('http://pbrown.ca/teaching/303/data/smoke.RData',
+                smokeFile)
+}
+(load(smokeFile))
+
+```
+
+The `smoke` object is a `data.frame` containing the data, the `smokeFormats`
+gives some explanation of the variables.  The `colName` and `label` columns of
+`smokeFormats` contain variable names in `smoke` and descriptions respectively.
+
+```{r smokeVariable}
+smokeFormats[smokeFormats[, 'colName'] == 'chewing_tobacco_snuff_or',
+             c('colName', 'label')]
+```
+
+
+Consider the following model and set of results
+
+```{r smokeModel, tidy=TRUE}
+# get rid of 9, 10 year olds and missing age and race
+smokeSub = smoke[which(smoke$Age > 10 & !is.na(smoke$Race)),]
+smokeSub$ageC = smokeSub$Age - 16
+smokeModel = glm(
+  chewing_tobacco_snuff_or ~ ageC + RuralUrban + Race + Sex,
+  data = smokeSub,
+  family = binomial(link = 'logit')
+)
+```
+```{r smokeTable}
+knitr::kable(summary(smokeModel)$coef, digits = 3)
+```
+```{r smokeOdds, tidy=TRUE}
+logOddsMat = cbind(est = smokeModel$coef, confint(smokeModel, level = 0.99))
+oddsMat = exp(logOddsMat)
+oddsMat[1, ] = oddsMat[1, ] / (1 + oddsMat[1, ])
+rownames(oddsMat)[1] = 'Baseline prob'
+knitr::kable(oddsMat, digits = 3)
+```
+
+## Question 2a
+
+Write down and explain the statistical model which `smokeModel` corresponds to, defining all your variables.  It is sufficient to write $X_i\beta$ and explain in words what the variables in $X_i$ are, you need not write $\beta_1 X_{i1} + \beta_2 X_{i2} + \ldots$.
+
+**soln**
+
+$$\log(\frac{\mu_i}{1-\mu_i}) = \boldsymbol{X_i\beta} $$
+for the $i^{th}$ student, where $\mu_i$ is the proportion of students using chewing tobacco, snuff or dip at least once in the last 30 days.
+
+We use logistic regression, where our response (proportion of students using chewing tobacco, snuff or dip at least once in the last 30 days) is linked to a linear combination of of covariates with a logit link. Our covariates are age (`ageC`, numeric and centered at 16), rurality (`RuralUrban`, categorical with levels Rural and Urban, urban is the reference category), race (`Race`, categorical with levels White, Black, Hispanic, Asian, Native, Pacific, White is the reference level) and sex (`Sex`, categorical with levels Female and Male, male is the reference level).
+
+**soln ends**
+
+## Question 2b
+
+Write a sentence or two interpreting the row "baseline prob" in the table above.  Be specific about which subset of individuals this row is referring to.
+
+**soln**
+
+The "baseline prob" is our estimated probability that a 16-year-old urban, white, male has used chewing tobacco, snuff or dip at least once in the last 30 days. We estimate this probability to be between 5 and 7%.
+
+**soln ends**
+
+## Question 2c
+
+If American TV is to believed, chewing tobacco is popular among cowboys, and cowboys are white, male and live in rural areas. In the early 1980s, when Dr. Brown was a child, the only Asian woman ever on North American TV was Yoko Ono, and Yoko Ono lived in a city and was never seen chewing tobacco.  Consider the following code, and recall that a 99% confidence interval is roughly plus or minus three standard deviations.
+
+```{r predict}
+newData = data.frame(
+  Sex = rep(c('M', 'F'), c(3, 2)),
+  Race = c('white', 'white', 'hispanic', 'black', 'asian'),
+  ageC = 0,
+  RuralUrban = rep(c('Rural', 'Urban'), c(1, 4))
+)
+smokePred = as.data.frame(predict(smokeModel,
+                                  newData,
+                                  se.fit = TRUE,
+                                  type = 'link'))[, 1:2]
+smokePred$lower = smokePred$fit - 3 * smokePred$se.fit
+smokePred$upper = smokePred$fit + 3 * smokePred$se.fit
+smokePred
+expSmokePred = exp(smokePred[, c('fit', 'lower', 'upper')])
+knitr::kable(cbind(newData[, -3],
+                   1000 * expSmokePred / (1 + expSmokePred)),
+             digits = 1)
+```
+
+Write a short paragraph addressing the hypothesis that rural white males are the group most likely to use chewing tobacco, and there is reasonable certainty that less than half of one percent of ethnic-minority urban women and girls chew tobacco.
+
+**soln**
+
+It is okay for students to use only the results given (don't have to do more analysis for potential full marks).
+
+- Rural, white males have the highest usage in the table shown (CI doesn't overlap with others and are located higher).
+- There is reasonable certainty that use of chewing tobacco/snuff/drip have been used at least once in the last 30 days by less than half a percent of urban black females (CI completely less than 5 in 1000), but we can't be reasonably certain about this claim for urban, Asian women as 5 in 1000 (0.5%) is in the confidence interval. Thus we should be careful about claiming that use of chewing tobacco is at less than half of one percent among all ethnic minority urban women.
+- We are also limited in that these results are for 16 year-olds and so should be cautious in our generalisations to the whole population.
+
+**soln ends**
+
+\newpage
+
+
+# Question 3: Generalised linear models - Poisson
+
+Data from the Fiji Fertility Survey of 1974 can be obtained as follows.
+
+```{r dataFiji, echo=TRUE, tidy=TRUE}
+fijiFile = 'fijiDownload.RData'
+if (!file.exists(fijiFile)) {
+  download.file('http://pbrown.ca/teaching/303/data/fiji.RData',
+                fijiFile)
+}
+(load(fijiFile))
+```
+
+
+The `monthsSinceM` variable is the number of months since a woman was first married.  We'll make the overly simplistic assumption that a woman's fertility rate is zero before marriage and constant thereafter until menopause.  Only pre-menopausal women were included in the survey sample.  The `residence` variable  has three levels, with 'suva' being women living in the capital city of Suva.  Consider the following code.
+
+```{r modelFiji}
+# get rid of newly married women and those with missing literacy status
+fijiSub = fiji[fiji$monthsSinceM > 0 & !is.na(fiji$literacy), ]
+fijiSub$logYears = log(fijiSub$monthsSinceM / 12)
+fijiSub$ageMarried = relevel(fijiSub$ageMarried, '15to18')
+fijiSub$urban = relevel(fijiSub$residence, 'rural')
+fijiRes = glm(
+  children ~ offset(logYears) + ageMarried + ethnicity + literacy + urban,
+  family = poisson(link = log),
+  data = fijiSub
+)
+logRateMat = cbind(est = fijiRes$coef, confint(fijiRes, level = 0.99))
+knitr::kable(cbind(summary(fijiRes)$coef,
+                   exp(logRateMat)),
+             digits = 3)
+```
+
+
+```{r modelFiji2}
+fijiSub$marriedEarly = fijiSub$ageMarried == '0to15'
+fijiRes2 = glm(
+  children ~ offset(logYears) + marriedEarly + ethnicity +  urban,
+  family = poisson(link = log),
+  data = fijiSub
+)
+logRateMat2 = cbind(est = fijiRes2$coef, confint(fijiRes2, level = 0.99))
+knitr::kable(cbind(summary(fijiRes2)$coef,
+                   exp(logRateMat2)),
+             digits = 3)
+lmtest::lrtest(fijiRes2, fijiRes)
+```
+
+## Question 3a
+
+
+Write down and explain the statistical model which `fijiRes` corresponds to, defining all your variables.  It is sufficient to write $X_i\beta$ and explain in words what the variables in $X_i$ are, you need not write $\beta_1 X_{i1} + \beta_2 X_{i2} + \ldots$.
+
+**soln**
+
+$$\log(\text{number of children}_i) = \boldsymbol{X_i\beta} + \log(\text{years married}_i)$$
+for the $i^{th}$ woman.
+
+We use Poisson regression, where our response (number of children had per year) is linked to a linear combination of covariates with a log link. Our offset is log(year married), making this a rate model where we will interpret our response as children per year. Our covariates are age married (`ageMarried`, categorical with levels 0to15, 15to18, 18to22...etc and 15to18 is the reference level), ethnicity (`ethnicity`, categorical with levels Fijian, etc., Fijian is the reference category), if the woman is literate (`literacy`, categorical with levels yes and no, yes is the reference level) and urban (`urban`, categorical with levels rural, suva and urbanOther, rural is the reference level).
+
+**soln ends**
+
+## Question 3b
+
+Is the likelihood ratio test performed above comparing nested models?  If so what constraints are on the vector of regression coefficients $\beta$ in the restricted model?
+
+**soln**
+
+Yes, this is comparing nested models as fijiRes2 is nested within fijiRes. The constraints on the vector of regression coefficients, $\beta$, would be that literacy would have $\beta=0$ as it is not included in the model, and the levels of age married, other than 0to15 would be constrained to all have the same $\beta$ as marriedEarly collapses all of these into one level. I.e., $\beta_{15to18} = \beta_{18to22} = \ldots = \beta_{30toInf}$
+
+**soln ends**
+
+## Question 3c
+
+It is hypothesized that improving girls' education and delaying marriage will result in women choosing to have fewer children and increase the age gaps between their children. An alternate hypothesis is that contraception was not widely available in Fiji in 1974 and as a result there was no way for married women to influence their birth intervals.   Supporters of each hypothesis are in agreement that fertility appears to be lower for women married before age 15, likely because these women would not have been fertile in the early years of their marriage.
+
+Write a paragraph discussing the results above in the context of these two hypotheses.
+
+**soln**
+
+It is okay for students to use only the results given (don’t have to do more analysis for potential full marks).
+
+- The LR test suggests adding literacy isn't helping explain the data significantly better (large p-value on LR test) which is not consistent with improving education resulting in fewer children because literacy as an education proxy does not appear to be significantly related to children had per year after controlling for the other variables.  
+- Considering the estimates from fijiRes for the levels of age married, none of the later ages married have a significantly different rate of having children from the 15to18 group (1 in all the CIs equivalent here to p-value>0.05), which is not consistent with a "delayed marriage effect". We can also see this from the LR test as the simpler version of the variable appears to work just as well as the version with more levels, also supporting this idea of no meaningful differences across these groups.
+- The rate of children per year is significantly lower for those married before 15, (between 8 and 17% lower, looking at the married early variable in fijires2), which is consistent with women married before 15 not being fertile in the early years of their marriage.
+
+In conclusion, our results seem more consistent with the idea that contraception wasn't widely available in Fiji, as neither being better educated (literate) nor marrying later seemed to explain the rate at which women were having children. Education and delayed marriage won't readily influence the rate of having children if the mechanisms to control getting pregnant, e.g. contraception, aren't available to anyone. 
+
+Note: In other places, more educated women might have better access to contraception and know how to correctly use it more than women with less education, which is one of the mechanisms through which education can influence the rate of having children.
+
+**soln ends**
