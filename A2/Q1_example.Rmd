@@ -1,0 +1,40 @@
+---
+title: "STA303 - Assignment 2 Example Code"
+author: "Winter 2020"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+This file provides example code you may find useful to adapt to answer parts of Question 1. You do not have to do it this way if you prefer a different approach. Code for fitting models is not included here as that has been demonstrated in class. 
+
+**You must run the following chunk for the other code to work.**
+
+```{r setup}
+library(tidyverse)
+data("starwars")
+```
+
+## Making a scatter plot with a line of best fit.
+
+The alpha option in the the `geom_point()` function lets you set the transparency of the points to see if there is overprinting.
+
+```{r scatterwithline}
+ggplot(starwars, aes(x = height, y = mass)) +
+    geom_point(alpha = 0.5) +
+    geom_smooth(method = "lm", se = FALSE) +
+    theme_classic()
+```
+
+## Creating a new variable that is a grouped mean
+
+`group_by()` lets you group the data by the variable of which you are interested in calculating means within each level. If I wanted to add two variables, one with the average mass and and one with the average height by each each eye colour, the following code would help me do that. It will save over my original data set and the updated data frame will have all the original variables and two new ones.
+
+```{r addgroupmeans}
+starwars <- starwars %>% 
+    group_by(eye_color) %>% 
+    mutate(mean_mass = mean(mass), mean_age = mean(height))
+```
+
+

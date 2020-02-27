@@ -1,0 +1,28 @@
+---
+title: "A2 Soln"
+author: "Xiangyu Kong"
+date: "27/02/2020"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE, message=FALSE}
+library(tidyverse)
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  tidy.opts = list(width.cutoff = 60)
+)
+```
+
+
+# Question 1
+
+<!-- \newpage -->
+<!-- # Appendix -->
+
+<!-- ```{r ref.label=knitr::all_labels(), echo = T, eval = F} -->
+<!-- ``` -->
