@@ -179,6 +179,8 @@ It is inappropriate to directly compare students' iq with their end-of-year lang
 
 After considering the `school` effect, by looking at the confidence interval for iq, we can see that the $95\%$ confidence interval is greater than 0. This shows that considering the effect explained by students studying in different schools, in general, students with higher iq will achieve a better end-of-year language score.
 
+As for the other factors, by looking at their confidence intervals, female students are more likely to achieve a higher score than male students. Students in families with higher socioeconomic status is more likely to achieve a higher score. Students' minority statuses may have less of an impact because the p-value for the estimate is insignificant, and the confidence intervals include $0$. Students in a school with higher mean iq are also likely to achieve a higher score, but students in a school with higher average socioeconomic status is likely to achieve a lower score.
+
 
 \newpage
 # Question 2
@@ -204,13 +206,18 @@ library("glmmTMB")
 
 smokeModelT = glmmTMB(
   chewing_tobacco_snuff_or ~ ageC * Sex +
-    RuralUrban + Race + (1 |
-                           state / school),
+    RuralUrban + Race + (1 | state / school),
   data = smokeSub,
   family = binomial(link = "logit")
 )
 
+summary(smokeModelT)
+
 knitr::kable(summary(smokeModelT)$coef$cond, digits = 2)
+```
+
+``` {r 2_coefTable}
+Pmisc::coefTable(smokeModelT)
 ```
 
 ``` {r 2_ranefPlot1}
@@ -231,20 +238,50 @@ Pmisc::ranefPlot(
 )
 ```
 
-
+\newpage
 ## Question 2.a
 
 <!-- TODO: Write down a statistical model corresponding to smokeModelT. Briefly explain the difference between this model and a generalized linear model. -->
+
+The model can be represented by
+
+\begin{align*}
+Y_{i j} ~ | ~ A, B &\sim  Binomial(N_{i j}, \mu_{i j})\\
+h(\mu_{i j}) = logit(\mu_{i j}) &= \frac{\mu_{i j}}{1 - \mu_{i j}} = X_{i j} \beta + A_{i} + B_{i j}\\
+A_{i} &\sim N(0, \sigma_{A}^{2})\\
+B_{i j} &\sim N(0, \sigma_{B}^{2})
+\end{align*}
+
+where 
+
+- $Y_{i j}$ is the number of people who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days, from the $j$th school of the $i$th state.
+- $N_{i j}$ is the number of people in the $j$th school of the $i$th state.
+- $\mu_{i j}$ is the proportion of the people who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days, from the $j$th school of the $i$th state.
+- $A_{i}$ is the state $i$'s deviation from the population average
+- $B_{i j}$ is the $i$th state's $j$'s school's deviation from the population average.
+- $X_{i j}$ is the covariate matrix for the $j$th school of the $i$th state.
+- $h(\mu_{i j})$ is the logit function.
+
+`smokeModelT` is a Generalized Linear Mixed Model. The difference between `smokeModelT` and the Generalized Linear Model is that `smokeModelT` contains nested random effects from `state` and `school`. It assumes that the state and the school that the students are from affects the number of people who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days.
 
 
 ## Question 2.b
 
 <!-- TODO: Briefly explain why this generalized linear mixed model with a logit link is more appropriate for this dataset than a linear mixed model. -->
 
+The generalized linear mixed model with a logit link is more appropriate for this dataset than a linear mixed model because the responses are binary, and we are interested in the number of success (number of  people who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days) out of a fixed number of trials (the total number of people within the specific subgroup). 
 
+
+\newpage
 ## Question 2.c
 
 <!-- TODO: Write a paragraph assessing the hypothesis that state-level differences in chewing tobacco usage amongst high school students are much larger than differences between schools within a state. If one was interested in identifying locations with many tobacco chewers (in order to sell chewing tobacco to children, or if you prefer to implement programs to reduce tobacco chewing), would it be important to find individual schools with high chewing rates or would targeting those states where chewing is most common be sufficient? -->
+
+From the table output using `Pmisc::coefTable(smokeModelT)`, the last two lines of the table represents the standard deviation explained by schools nested within states and states. We can see that one standard deviation difference in school nested in state level variation increases weight by $100 \times [\exp(0.75) - 1] = 111.70\%$, where as one standard deviation difference in state level variation increases weight by $100 \times [\exp(0.31) - 1] = 36.34\%$. This means that the difference between schools within a state is much greater than the state-level differences.
+
+Also, according to the plot generated using `state` as the group variable, there is a trend and very little overlap between the confidence intervals, meaning that using `state` as a random variable is appropriate. However, the plot generated using `school:state` indicates that there is a greater trend than the plot generated using just `state`. The plot is right skewed (there are more schools with value greater than 0), and the confidence intervals also do not overlap.
+
+The two evidence above indicate that differences between schools within a state in chewing tobacco usage amongst high school students are much larger than state-level differences, contradicting to the hypothesis. This suggests that if one was interested in identifying locations with many tobacco chewers, it would be more important to find individual schools with high chewing rates, rather than just targeting those states where chewing is most common.
 
 
 \newpage
