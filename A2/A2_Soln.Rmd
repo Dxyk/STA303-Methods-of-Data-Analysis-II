@@ -74,9 +74,8 @@ summary(school_lm)
 knitr::kable(confint(school_lm), digits = 4)
 ```
 
-<!-- TODO: Missing any thing? -->
-
 \newpage
+<!-- TODO: Missing any thing? -->
 **Estimates:**
 
 - The intercept shows that the average end-of-year language scores for the baseline subgroup is $38.46$. This baseline subgroup consists of male, white (non-minority ethnics) students with a verbal IQ score of 0, who live in a family with socioeconomic status of 0, and study in a school with students' mean socioeconomic status of 0 and mean verbal IQ score of 0.
@@ -173,7 +172,7 @@ The plot shows that for different schools, there conditional mean values differ 
 
 ## Question 1.h
 
-<!-- TODO: Write a short paragraph summarizing, what you have learned from this analysis. Focus on answering the question of interest. Remember that interpreting confidence intervals is preferred to point estimates and make sure any discussion of p-values and confidence intervals are statistically correct. Also mention what proportion of the residual variation, after fitting the fixed effects, the differences between schools accounts for. -->
+<!-- Write a short paragraph summarizing, what you have learned from this analysis. Focus on answering the question of interest. Remember that interpreting confidence intervals is preferred to point estimates and make sure any discussion of p-values and confidence intervals are statistically correct. Also mention what proportion of the residual variation, after fitting the fixed effects, the differences between schools accounts for. -->
 
 It is inappropriate to directly compare students' iq with their end-of-year language score. This is because the schools that the students are studying in also affects the student's language score. This can be visually shown in the conditional mean and confidence interval plot above, and can also be statistically shown after fitting a linear mixed model with `school` as the random effect. The `school` effects explain about $\frac{8.177}{8.177 + 38.240} \times 100 = 17.62\%$ of the residual variance in the model.
 
@@ -241,7 +240,7 @@ Pmisc::ranefPlot(
 \newpage
 ## Question 2.a
 
-<!-- TODO: Write down a statistical model corresponding to smokeModelT. Briefly explain the difference between this model and a generalized linear model. -->
+<!-- Write down a statistical model corresponding to smokeModelT. Briefly explain the difference between this model and a generalized linear model. -->
 
 The model can be represented by
 
@@ -267,7 +266,7 @@ where
 
 ## Question 2.b
 
-<!-- TODO: Briefly explain why this generalized linear mixed model with a logit link is more appropriate for this dataset than a linear mixed model. -->
+<!-- Briefly explain why this generalized linear mixed model with a logit link is more appropriate for this dataset than a linear mixed model. -->
 
 The generalized linear mixed model with a logit link is more appropriate for this dataset than a linear mixed model because the responses are binary, and we are interested in the number of success (number of  people who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days) out of a fixed number of trials (the total number of people within the specific subgroup). 
 
@@ -275,7 +274,7 @@ The generalized linear mixed model with a logit link is more appropriate for thi
 \newpage
 ## Question 2.c
 
-<!-- TODO: Write a paragraph assessing the hypothesis that state-level differences in chewing tobacco usage amongst high school students are much larger than differences between schools within a state. If one was interested in identifying locations with many tobacco chewers (in order to sell chewing tobacco to children, or if you prefer to implement programs to reduce tobacco chewing), would it be important to find individual schools with high chewing rates or would targeting those states where chewing is most common be sufficient? -->
+<!-- Write a paragraph assessing the hypothesis that state-level differences in chewing tobacco usage amongst high school students are much larger than differences between schools within a state. If one was interested in identifying locations with many tobacco chewers (in order to sell chewing tobacco to children, or if you prefer to implement programs to reduce tobacco chewing), would it be important to find individual schools with high chewing rates or would targeting those states where chewing is most common be sufficient? -->
 
 From the table output using `Pmisc::coefTable(smokeModelT)`, the last two lines of the table represents the standard deviation explained by schools nested within states and states. We can see that one standard deviation difference in school nested in state level variation increases weight by $100 \times [\exp(0.75) - 1] = 111.70\%$, where as one standard deviation difference in state level variation increases weight by $100 \times [\exp(0.31) - 1] = 36.34\%$. This means that the difference between schools within a state is much greater than the state-level differences.
 
@@ -355,17 +354,30 @@ legend(
 \newpage
 ## Question 3.a
 
-<!-- TODO: Write a short paragraph describing a case/control model (not the results) corresponding the theGlm and theGlmInt objects. Be sure to specify the case definition and the control group, and what the covariates are. -->
+<!-- Write a short paragraph describing a case/control model (not the results) corresponding the theGlm and theGlmInt objects. Be sure to specify the case definition and the control group, and what the covariates are. -->
+
+<!-- TODO: What should be the covariates? -->
+A case-control model that correspond to `theGlm` and `theGlmInt` models can be sampled from a pool of patients who are injured in motor vehicle accidents. The case in this study is the group of people who have been fatally injured in motor vehicle accidents. The control in this study is the group of the people who are slightly injured in motor vehichles accidents, under similar age, sex, lighting and weather conditions. The covariates are the lighting and weather conditions.
 
 
 ## Question 3.b
 
-<!-- TODO: Write a short report assessing whether the UK road accident data are consistent with the hypothesis that women tend to be, on average, safer as pedestrians than men, particularly as teenagers and in early adulthood. Explain which of the two models fit is more appropriate for addressing this research question. -->
+<!-- Write a short report assessing whether the UK road accident data are consistent with the hypothesis that women tend to be, on average, safer as pedestrians than men, particularly as teenagers and in early adulthood. Explain which of the two models fit is more appropriate for addressing this research question. -->
+
+To address this research question, we need to look at a model that contains intersection between `sex` and `age` in order to compare the probability of male and female getting fatal injuries when they are teenagers and in early adulthood. Thus `theGlmInt` is a better option.
+
+<!-- TODO: odds and graphs contradict? -->
+By looking at the intersection estimated log odds for `sexFemale:age16 - 20`, we see that the estimated log odds is $0.150$ with a p-value of $0.016$. Assuming using a standard significance level of $\alpha = 0.05$, this result is significant. By exponentiating this value, we obtain an odds value of $\exp(0.150) = 1.16$. This indicates that within the age group between 16 to 20-year-olds, the odds of a female getting fatal injury is greater than a male getting fatal injury. This suggests that the hypothesis that women tend to be, on average, safer as pedestrians than men, particularly as teenagers and in early adulthood is false.
+
+By looking at the probability against age graph, within the age range around 15-20 years old, males have a higher probability of getting fatal injuries in motor accidents than female do, and the $99\%$ confidence intervals do not overlap. This supports the hypothesis that women tend to be, on average, safer as pedestrians than men, particularly as teenagers and in early adulthood is false.
 
 
 ## Question 3.c
 
-<!-- TODO: It is well established that women are generally more willing to seek medical attention for health problems than men, and it is hypothesized that men are less likely than women to report minor injuries caused by road accidents. Write a critical assessment of whether or not the control group is a valid one for assessing whether women are on average better at road safety than man. -->
+<!-- It is well established that women are generally more willing to seek medical attention for health problems than men, and it is hypothesized that men are less likely than women to report minor injuries caused by road accidents. Write a critical assessment of whether or not the control group is a valid one for assessing whether women are on average better at road safety than man. -->
+
+<!-- TODO: What does it mean for a valid control group -->
+The control group is not a valid one for assessing whether women are on average better at road safety than man. This is because in the control group, people are still injured and not completely healthy. As stated in the question, men may be less likely than women to report minor injuries caused by road accidents, which leads to skewed data. A valid control group could be sampled from police reports of motor accedents where pedastrians involved were not injured at all. However, this is very difficult to sample, so we can only rely on the given data for now.
 
 
 <!-- \newpage -->
