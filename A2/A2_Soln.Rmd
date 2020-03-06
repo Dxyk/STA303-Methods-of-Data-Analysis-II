@@ -247,11 +247,10 @@ The model can be represented by
 
 \begin{align*}
 Y_{i j} ~ | ~ A, B &\sim  Binomial(N_{i j}, \mu_{i j})\\
-h(\mu_{i j}) = logit(\mu_{i j}) &= \frac{\mu_{i j}}{1 - \mu_{i j}} = X_{i j} \beta + A_{i} + B_{i j}\\
+h(\mu_{i j}) = logit(\mu_{i j}) &= \frac{\mu_{i j}}{1 - \mu_{i j}} = X_{i j} \beta + A_{i} + B_{i j} + \epsilon_{i j}\\
 A_{i} &\sim N(0, \sigma_{A}^{2})\\
 B_{i j} &\sim N(0, \sigma_{B}^{2})
 \end{align*}
-
 where 
 
 - $Y_{i j}$ is the number of people who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days, from the $j$th school of the $i$th state.
@@ -260,6 +259,7 @@ where
 - $A_{i}$ is the state $i$'s deviation from the population average
 - $B_{i j}$ is the $i$th state's $j$'s school's deviation from the population average.
 - $X_{i j}$ is the covariate matrix for the $j$th school of the $i$th state.
+- $\epsilon_{i j}$ is the random error term for the $j$th school of the $i$th state.
 - $h(\mu_{i j})$ is the logit function.
 
 `smokeModelT` is a Generalized Linear Mixed Model. The difference between `smokeModelT` and the Generalized Linear Model is that `smokeModelT` contains nested random effects from `state` and `school`. It assumes that the number of students who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days is dependent to each other for students from the same state and school.
