@@ -102,7 +102,7 @@ knitr::kable(confint(school_lm), digits = 4)
 \newpage
 ## Question 1.e
 
-``` {r 1_e_glm, message=FALSE}
+``` {r 1_e_lmm, message=FALSE}
 school_lmm <-
   lme4::lmer(test ~ iq + sex + ses + minority_status + mean_ses +
                mean_iq + (1 | school),
@@ -112,7 +112,7 @@ summary(school_lmm)
 ```
 
 \newpage
-``` {r 1_e_glm_confint, message=FALSE}
+``` {r 1_e_lmm_confint, message=FALSE}
 knitr::kable(confint(school_lmm), digits = 4)
 ```
 
@@ -157,9 +157,9 @@ The interpretation for the fixed effect esitmates are similar to that of the lin
 
 The estimated fixed effects for `iq`, `sex` and `ses` in the mixed linear model are very similar to the estimates given by the simple linear regression model. In the mixed linear model, their $95 \%$ confidence intervals are slightly tighter.
 
-The estimated fixed effect for `mean_iq` and `mean_ses` both increased comparing to the linear regression model. By considering `school` as a random effect, we are grouping the observations into different groups according to school. However, the `mean_iq` and `mean_ses` for each school are the same. This means for each school, there is only one observation of `mean_iq` and `mean_ses`. The sample size within each group is less than the sample size used in the linear regression model. This causes their estimates to increase, and also causes their $95 \%$ confidence interval to be wider than the simple linear regression model. 
+The estimated fixed effect for `mean_iq` and `mean_ses` both increased comparing to the linear regression model. By considering `school` as a random effect, we are grouping the observations into different groups according to school. However, the `mean_iq` and `mean_ses` for each school are the same. This means for each school, there is only one observation of `mean_iq` and `mean_ses`. The sample size within each group is less than the sample size used in the linear regression model. This causes their $95 \%$ confidence interval to be narrower than the simple linear regression model. 
 
-The estimated fixed effect for `minority_status` has significantly decreased (more negative), but for both the generalized linear model and linear regression model, the $95\%$ confidence intervals include $0$, so the minority status is still likely to be unrelated to the students' language score. 
+The estimated fixed effect for `minority_status` has significantly decreased (more negative), but for both the linear mixed model and linear regression model, the $95\%$ confidence intervals include $0$, so the minority status is still likely to be unrelated to the students' language score. 
 
 
 \newpage
