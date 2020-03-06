@@ -1,6 +1,6 @@
 ---
 title: "A2 Soln"
-author: "Xiangyu Kong"
+author: "Xiangyu Kong, 1002109620"
 date: "05/03/2020"
 output:
   pdf_document: default
