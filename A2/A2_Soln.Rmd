@@ -1,7 +1,7 @@
 ---
 title: "A2 Soln"
 author: "Xiangyu Kong"
-date: "27/02/2020"
+date: "05/03/2020"
 output:
   pdf_document: default
   html_document:
@@ -9,20 +9,25 @@ output:
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
+# packages
 library(tidyverse)
 library(glmmTMB)
 
+# chunk options
 knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE,
   tidy.opts = list(width.cutoff = 60)
 )
+
+# Set random seed
+set.seed(9620)
 ```
 
 
 # Question 1
 
-``` {r 1_load_data}
+``` {r 1_load_data, warning=FALSE}
 school_data = read_csv("school.csv")
 ```
 
@@ -31,7 +36,7 @@ school_data = read_csv("school.csv")
 
 <!-- Briefly describe why, without even looking at these data, you would have a concern about one of the assumptions of linear regression. -->
 
-The independence assumption may be violated. A school with better teaching resources or better environment may be more likely to have students with better end-of-year language scores. Since there will be multiple observations taken from the same school, they may be dependent and correlated.
+The independence assumption may be violated. Students from the same school may produce end-of-year language scores similar to each other. For example, A school with better teaching resources or environment may be more likely to have students with better end-of-year language scores. Thus the observations may not independent of each other.
 
 
 ## Question 1.b
@@ -45,7 +50,7 @@ ggplot(school_data, aes(x = iq, y = test)) +
   theme_classic()
 ```
 
-Students' iqs and end-of-year language scores are positively related. Students with higher iq tend to achieve a better score in the end-of-year language test.
+From the scatter plot, we observe an upward ascending trend as `iq` increases. The best fit blue line also suggests a positive relationship between `iq` and `test`. Thus we can claim that according to the plot that students' verbal iq score and end-of-year language scores are positively related. Students with higher iq tend to achieve a better score in the end-of-year language test.
 
 
 ## Question 1.c
@@ -75,23 +80,23 @@ knitr::kable(confint(school_lm), digits = 4)
 ```
 
 \newpage
-<!-- TODO: Missing any thing? -->
 **Estimates:**
 
-- The intercept shows that the average end-of-year language scores for the baseline subgroup is $38.46$. This baseline subgroup consists of male, white (non-minority ethnics) students with a verbal IQ score of 0, who live in a family with socioeconomic status of 0, and study in a school with students' mean socioeconomic status of 0 and mean verbal IQ score of 0.
-- An increase in student's iq level by 1 tends to make a student's end-of-year language score increase by $2.29$.
+- The intercept shows that the average end-of-year language scores for the baseline subgroup is $38.46$. 
+  - This baseline subgroup consists of male, white (non-minority ethnics) students with verbal IQ score of $0$, who live in families with socioeconomic status of $0$, and study in schools with students' mean socioeconomic status of $0$ and mean verbal IQ score of $0$.
+- An increase in student's verbal iq score by $1$ tends to make a student's end-of-year language score increase by $2.29$.
 - A female student tend to have an end-of-year language score $2.34$ higher than a male student.
-- An increase in student's ses level by 1 tends to make a student's end-of-year language score increase by $0.19$.
-- A minority student tend to have an end-of-year language score $0.17$ lower than a non-minority student.
-- An increase in the school's mean ses level by 1 tends to make a student's end of year language score decrease by $0.22$.
-- An increase in the school's mean iq level by 1 tends to make a student's end of year language score increase by $1.43$.
+- An increase in student's ses level by $1$ tends to make a student's end-of-year language score increase by $0.19$.
+- A minority student tend to have an end-of-year language score $0.17$ lower than a non-minority (white) student.
+- An increase in the student's school's mean ses level by $1$ tends to decrease the student's end of year language score by $0.22$.
+- An increase in the student's school's mean iq score by $1$ tends to increase the student's end of year language score by $1.43$.
 
 **Confidence Intervals:**
 
-- The $95\%$ confidence interval for the model's intercept is between 37.84 and 39.07.
+- The $95\%$ confidence interval for the model's intercept is $(37.84,39.07)$.
 - For `iq`, `sex`, `ses` and `mean_iq`, the $95\%$ confidence intervals are positive. This indicates that they are likely to have a positive relationship with the student's end-of-year language scores.
 - For `mean_ses`, the $95\%$ confidence interval is negative. This means that there is likely to be a negative relationship between `mean_ses` the students' end-of-year language scores.
-- The confidence interval for `minority_status` includes $0$. It is possible that it does not have a strong effect on the students' test scores.
+- The confidence interval for `minority_status` includes $0$. It is possible that it is not associated to the students' language scores.
 
 
 \newpage
@@ -113,78 +118,76 @@ knitr::kable(confint(school_lmm), digits = 4)
 
 <!-- Fit a linear mixed model with the same fixed effects as 1c and with a random intercept for school. -->
 <!-- Show the code for the model you fit and the results of running summary() and confint() on the model you fit and briefly interpret the results. -->
-<!-- Hint 1: Consider the estimated standard deviations in the summary to make sure you understand the first two rows of the confint output. -->
 
 **Random Effects:**
 
-- By looking at the Random effects section in the summary, we can see that `school` effects explain about $\frac{8.177}{8.177 + 38.240} \times 100 = 17.62\%$ of the residual variance in the model.
+By looking at the Random effects section in the summary, we can see that:
+
+- The School random effect has variance of $8.177$
+- The Residuals has variance of $38.240$
+- The School random effect explain about $\frac{8.177}{8.177 + 38.240} \times 100 = 17.62\%$ of the total variance in the model.
 
 **Estimates:**
 
-- The intercept shows that the average end-of-year language scores for the baseline subgroup is $38.38$. This baseline subgroup consists of male, white (non-minority ethnics) students with a verbal IQ score of 0, who live in a family with socioeconomic status of 0, and study in a school with students' mean socioeconomic status of 0 and mean verbal IQ score of 0.
+The interpretation for the fixed effect esitmates are similar to that of the linear model's estimates.
+
+- The intercept shows that the average end-of-year language scores for the baseline subgroup is $38.38$. 
+  - This baseline subgroup consists of male, white (non-minority ethnics) students with verbal IQ score of 0, who live in families with socioeconomic status of 0, and study in schools with students' mean socioeconomic status of 0 and mean verbal IQ score of 0.
 - An increase in student's iq level by 1 tends to make a student's end-of-year language score increase by $2.28$.
 - A female student tend to have an end-of-year language score $2.29$ higher than a male student.
 - An increase in student's ses level by 1 tends to make a student's end-of-year language score increase by $0.19$.
-- A minority student tend to have an end-of-year language score $0.65$ lower than a non-minority student.
-- An increase in the school's mean ses level by 1 tends to make a student's end of year language score decrease by $0.20$.
-- An increase in the school's mean iq level by 1 tends to make a student's end of year language score increase by $1.64$.
+- A minority student tend to have an end-of-year language score $0.65$ lower than a non-minority (white) student.
+- An increase in the student's school's mean ses level by 1 tends to decrease the student's end of year language score by $0.20$.
+- An increase in the student's school's mean iq level by 1 tends to increase the student's end of year language score by $1.64$.
 
+\newpage
 **Confidence Intervals:**
-<!-- TODO: First two lines interpretation correct? -->
-- The first line in the linear mixed model's confidence interval is `.sig01`. This is the confidence interval for the standard deviation for the random effect for school. The standard deviation for random effect for school is not small, so this means that individual schools will have an impact on their students' end-of-year language scores.
-- The second line in the linear mixed model's confidence interval is `.sigma`. This is the confidence interval for the residuals' standard deviation. This represents the variability of students' end-of-year verbal test scores that is not caused by being in different schools.
-- The $95\%$ confidence interval for the model's intercept is between $37.44$ and $39.32$.
+
+- `.sig01` is the confidence interval for the standard deviation for the first random effect (i.e. the `school` random effect). It means that with $95\%$ confidence, the standard deviation explained by `school` is $(2.1819,3.5182)$
+- `.sigma` is the confidence interval for the residuals' standard deviation. This represents the standard deviation not explained by `school`.
+- The $95\%$ confidence interval for the model's intercept is $(37.44,39.32)$.
 - For `iq`, `sex`, `ses` and `mean_iq`, the $95\%$ confidence intervals are positive. This indicates that they are likely to have a positive relationship with the student's end-of-year language scores.
 - For `mean_ses`, the $95\%$ confidence interval is negative. This means that there is likely to be a negative relationship between `mean_ses` the students' end-of-year language scores.
-- The confidence interval for `minority_status` includes $0$. It is possible that it does not have a strong effect on the students' test scores.
+- The confidence interval for `minority_status` includes $0$. It is possible that it is not associated to the students' language scores.
 
 
 ## Question 1.f
 
 <!-- Briefly describe similarities and differences between the coefficients of the fixed effects in the results from 1d and 1e and what causes the differences. You may wish to use the use summaries of the data to help you. See the example code document. -->
 
-The estimated fixed effects in the mixed linear model are very similar to the estimates given by the simple linear regression model. Most estimated values are slightly decreased, meaning they have a weaker effect when considering `school` as a random effect. `minority_status` and `mean_iq` have slightly higher absolute values comparing to the linear regression model, meaning when considering `school` as a random effect, they have more impact on the students' end-of-year language scores.
+The estimated fixed effects for `iq`, `sex` and `ses` in the mixed linear model are very similar to the estimates given by the simple linear regression model. In the mixed linear model, their $95 \%$ confidence intervals are slightly tighter.
+
+The estimated fixed effect for `mean_iq` and `mean_ses` both increased comparing to the linear regression model. By considering `school` as a random effect, we are grouping the observations into different groups according to school. However, the `mean_iq` and `mean_ses` for each school are the same. This means for each school, there is only one observation of `mean_iq` and `mean_ses`. The sample size within each group is less than the sample size used in the linear regression model. This causes their estimates to increase, and also causes their $95 \%$ confidence interval to be wider than the simple linear regression model. 
+
+The estimated fixed effect for `minority_status` has significantly decreased (more negative), but for both the generalized linear model and linear regression model, the $95\%$ confidence intervals include $0$, so the minority status is still likely to be unrelated to the students' language score. 
 
 
+\newpage
 ## Question 1.g
 
 <!-- Plot the random effects for the different schools. Does it seem reasonable to have included these random effects? -->
 
 ``` {r 1_g_plot_random_effects}
-set.seed(1234)
-
 rand_effects <- lme4::ranef(school_lmm, condVar = TRUE)
-ranef_df <- as.data.frame(rand_effects)
-ranef_df %>%
-  ggplot(aes(
-    x = grp,
-    y = condval,
-    ymin = condval - 2 * condsd,
-    ymax = condval + 2 * condsd
-  )) +
-  geom_point() +
-  geom_errorbar() +
-  coord_flip()
+lattice::dotplot(rand_effects)
 ```
 
-The plot shows that for different schools, there conditional mean values differ from the grand. The confidence interval does not completely overlap with each other. The plot forms a visible trend, and this indicates that adding the random effect is appropriate in this case because it explains the variation in mean to a certain degree.
+The plot shows that for different schools, there conditional mean values differ from the grand mean. The range of the dots are wide apart and the plot forms a visible trend. This indicates that adding the random effect for `school` is appropriate in this case because it explains part of the the variation in mean.
 
 
 ## Question 1.h
 
 <!-- Write a short paragraph summarizing, what you have learned from this analysis. Focus on answering the question of interest. Remember that interpreting confidence intervals is preferred to point estimates and make sure any discussion of p-values and confidence intervals are statistically correct. Also mention what proportion of the residual variation, after fitting the fixed effects, the differences between schools accounts for. -->
 
-It is inappropriate to directly compare students' iq with their end-of-year language score. This is because the schools that the students are studying in also affects the student's language score. This can be visually shown in the conditional mean and confidence interval plot above, and can also be statistically shown after fitting a linear mixed model with `school` as the random effect. The `school` effects explain about $\frac{8.177}{8.177 + 38.240} \times 100 = 17.62\%$ of the residual variance in the model.
+Schools that the students are studying in affects the student's language score. This can be visually shown in the conditional mean and confidence interval plot above, and can also be analytically shown after fitting a linear mixed model with `school` as the random effect. The `school` effects explain about $\frac{8.177}{8.177 + 38.240} \times 100 = 17.62\%$ of the total variance in the model. To perform regression, we need to make it a grouping random effect.
 
-After considering the `school` effect, by looking at the confidence interval for iq, we can see that the $95\%$ confidence interval is greater than 0. This shows that considering the effect explained by students studying in different schools, in general, students with higher iq will achieve a better end-of-year language score.
-
-As for the other factors, by looking at their confidence intervals, female students are more likely to achieve a higher score than male students. Students in families with higher socioeconomic status is more likely to achieve a higher score. Students' minority statuses may have less of an impact because the p-value for the estimate is insignificant, and the confidence intervals include $0$. Students in a school with higher mean iq are also likely to achieve a higher score, but students in a school with higher average socioeconomic status is likely to achieve a lower score.
+After considering the `school` as a random effect, by looking at the confidence interval for `iq`, `sex`, `ses`, `mean_iq` and `mean_ses` we can see that the $95\%$ confidence interval do not include 0. We can conclude with $95\%$ confidence that considering the effect explained by students studying in different schools, as the students' verbal iq, their families' socioeconomic status and their schools' mean iq increase, they more likely to achieve a better end-of-year language scores. Female students are more likely to obtain a better end-of-year language score than male students. Students in schools with higher mean socialeconomic status will likely to obtain a lower score. The ethnicity of the student is likely to be uncorrelated to the students' score because the p-value for the estimate is insignificant, and the confidence intervals include $0$. 
 
 
 \newpage
 # Question 2
 
-``` {r 2_load_data}
+``` {r 2_load_data, include=FALSE, eval=FALSE}
 smokeFile = "smokeDownload.RData"
 if (!file.exists(smokeFile)) {
   download.file("http://pbrown.ca/teaching/303/data/smoke.RData",
@@ -200,7 +203,7 @@ smokeSub = smoke[which(smoke$Age > 10 & !is.na(smoke$Race)),]
 smokeSub$ageC = smokeSub$Age - 16
 ```
 
-``` {r 2_glmm}
+``` {r 2_glmm, include=FALSE, eval=FALSE}
 library("glmmTMB")
 
 smokeModelT = glmmTMB(
@@ -215,19 +218,18 @@ summary(smokeModelT)
 knitr::kable(summary(smokeModelT)$coef$cond, digits = 2)
 ```
 
-``` {r 2_coefTable}
+``` {r 2_coefTable, include=FALSE, eval=FALSE}
 Pmisc::coefTable(smokeModelT)
 ```
 
-``` {r 2_ranefPlot1}
+``` {r 2_ranefPlot1, include=FALSE, eval=FALSE}
 Pmisc::ranefPlot(smokeModelT,
                  grpvar = "state",
                  level = 0.5,
                  maxNames = 12)
 ```
 
-\newpage
-``` {r 2_ranefPlot2}
+``` {r 2_ranefPlot2, include=FALSE, eval=FALSE}
 Pmisc::ranefPlot(
   smokeModelT,
   grpvar = "school:state",
@@ -237,7 +239,6 @@ Pmisc::ranefPlot(
 )
 ```
 
-\newpage
 ## Question 2.a
 
 <!-- Write down a statistical model corresponding to smokeModelT. Briefly explain the difference between this model and a generalized linear model. -->
@@ -261,14 +262,18 @@ where
 - $X_{i j}$ is the covariate matrix for the $j$th school of the $i$th state.
 - $h(\mu_{i j})$ is the logit function.
 
-`smokeModelT` is a Generalized Linear Mixed Model. The difference between `smokeModelT` and the Generalized Linear Model is that `smokeModelT` contains nested random effects from `state` and `school`. It assumes that the state and the school that the students are from affects the number of people who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days.
+`smokeModelT` is a Generalized Linear Mixed Model. The difference between `smokeModelT` and the Generalized Linear Model is that `smokeModelT` contains nested random effects from `state` and `school`. It assumes that the number of students who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days is dependent to each other for students from the same state and school.
+
+The covariates are age (centered around 16 years old), sex (male, female), rural urban area (rural, urban), race (white, black, hispanic, asian, native, pacific). The covariates also include an intersection term for age and sex.
+
+The baseline group includes people who are 16 years old, male, white living in rural area.
 
 
 ## Question 2.b
 
 <!-- Briefly explain why this generalized linear mixed model with a logit link is more appropriate for this dataset than a linear mixed model. -->
 
-The generalized linear mixed model with a logit link is more appropriate for this dataset than a linear mixed model because the responses are binary, and we are interested in the number of success (number of  people who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days) out of a fixed number of trials (the total number of people within the specific subgroup). 
+The generalized linear mixed model with a logit link is more appropriate for this dataset than a linear mixed model because the responses are binary, and we are interested in the number of success (number of  people who have used chewing tobacco, snuff, or dip on 1 or more days in the past 30 days) out of a fixed number of trials (the total number of people within the specific subgroup). A binomial model with logit link fits well under this scenario.
 
 
 \newpage
@@ -276,9 +281,11 @@ The generalized linear mixed model with a logit link is more appropriate for thi
 
 <!-- Write a paragraph assessing the hypothesis that state-level differences in chewing tobacco usage amongst high school students are much larger than differences between schools within a state. If one was interested in identifying locations with many tobacco chewers (in order to sell chewing tobacco to children, or if you prefer to implement programs to reduce tobacco chewing), would it be important to find individual schools with high chewing rates or would targeting those states where chewing is most common be sufficient? -->
 
-From the table output using `Pmisc::coefTable(smokeModelT)`, the last two lines of the table represents the standard deviation explained by schools nested within states and states. We can see that one standard deviation difference in school nested in state level variation increases weight by $100 \times [\exp(0.75) - 1] = 111.70\%$, where as one standard deviation difference in state level variation increases weight by $100 \times [\exp(0.31) - 1] = 36.34\%$. This means that the difference between schools within a state is much greater than the state-level differences.
+In the table output using `Pmisc::coefTable(smokeModelT)`, the last two lines of the table represents the standard deviation explained by schools nested within states and by states. From the $95\%$ confidence intervals we can see that the the confidence interval for the standard deviation explained by `school` intersecting `state` is $(0.59, 0.95)$. The $95\%$ confidence interval for standard deviation explained by `state` is $(0.13, 0.74)$. The two confidence intervals do overlap, thus it is hard to tell for certain which difference is larger using confidence interval. 
 
-Also, according to the plot generated using `state` as the group variable, there is a trend and very little overlap between the confidence intervals, meaning that using `state` as a random variable is appropriate. However, the plot generated using `school:state` indicates that there is a greater trend than the plot generated using just `state`. The plot is right skewed (there are more schools with value greater than 0), and the confidence intervals also do not overlap.
+However, with point estimate as the next best metric option, we can see that the point estimate for standard deviation explained by school intersecting state is $0.75$, and standard deviation explained by state alone is $0.31$. Using point estimates, we conclude that `school` intersecting `state` explains the standard deviation more than using `state` alone.
+
+This claim is also supported by the plots. The plot generated using `state` as the group variable does have a trend and the $x$ axis has a wide range of values. This means that using `state` as a random variable is appropriate. However, the plot generated using `school:state` indicates that there is a greater trend than the $x$ axis is wider than that of the plot output using `state`. Thus using `school` intersecting `state` explains more difference than only using `state`.
 
 The two evidence above indicate that differences between schools within a state in chewing tobacco usage amongst high school students are much larger than state-level differences, contradicting to the hypothesis. This suggests that if one was interested in identifying locations with many tobacco chewers, it would be more important to find individual schools with high chewing rates, rather than just targeting those states where chewing is most common.
 
@@ -286,14 +293,15 @@ The two evidence above indicate that differences between schools within a state 
 \newpage
 # Question 3
 
-``` {r 3_load_data}
+``` {r 3_load_data, include=FALSE, eval=FALSE}
 pedestrainFile = Pmisc::downloadIfOld('http://pbrown.ca/teaching/303/data/pedestrians.rds')
 pedestrians = readRDS(pedestrainFile)
 pedestrians = pedestrians[!is.na(pedestrians$time), ]
 pedestrians$y = pedestrians$Casualty_Severity == 'Fatal'
+glimpse(pedestrians)
 ```
 
-``` {r 3_glm1}
+``` {r 3_glm1, include=FALSE, eval=FALSE}
 theGlm = glm(
   y ~ sex + age + Light_Conditions + Weather_Conditions,
   data = pedestrians,
@@ -302,9 +310,7 @@ theGlm = glm(
 knitr::kable(summary(theGlm)$coef, digits = 3)
 ```
 
-
-\newpage
-``` {r 3_glm2}
+``` {r 3_glm2, include=FALSE, eval=FALSE}
 theGlmInt = glm(
   y ~ sex * age + Light_Conditions + Weather_Conditions,
   data = pedestrians,
@@ -313,8 +319,7 @@ theGlmInt = glm(
 knitr::kable(summary(theGlmInt)$coef, digits = 3)
 ```
 
-\newpage
-``` {r 3_plot}
+``` {r 3_plot, include=FALSE, eval=FALSE}
 newData = expand.grid(
   age = levels(pedestrians$age),
   sex = c('Male', 'Female'),
@@ -351,33 +356,37 @@ legend(
 ```
 
 
-\newpage
 ## Question 3.a
 
 <!-- Write a short paragraph describing a case/control model (not the results) corresponding the theGlm and theGlmInt objects. Be sure to specify the case definition and the control group, and what the covariates are. -->
 
-<!-- TODO: What should be the covariates? -->
-A case-control model that correspond to `theGlm` and `theGlmInt` models can be sampled from a pool of patients who are injured in motor vehicle accidents. The case in this study is the group of people who have been fatally injured in motor vehicle accidents. The control in this study is the group of the people who are slightly injured in motor vehichles accidents, under similar age, sex, lighting and weather conditions. The covariates are the lighting and weather conditions.
+A case-control model that correspond to `theGlm` and `theGlmInt` models can be sampled from a pool of patients who are injured in motor vehicle accidents. The case in this study is the group of people who have been fatally injured in motor vehicle accidents. The control in this study is the group of the people who are slightly injured in motor vehicles accidents.
+
+The covariates are the age (26-35, 0-5, 6-10, 11-15, 16-20, 21-25, 36-45, 46-55, 56-65, 66-75 and Over 75), sex (male, female), lighting condition (daylight, lights lit, lights unlit,  no lighting, lighting unknown) and weather conditions (Fine no high winds, Raining no high winds, Snowing no high winds, Fine + high winds, Raining + high winds, Snowing + high winds, Fog or mist). The group corresponding to the baseline is the group of people who are male, 26-35 years old who got into motor accidents under daylight lighting condition and under fine no high winds weather condition.
 
 
 ## Question 3.b
 
 <!-- Write a short report assessing whether the UK road accident data are consistent with the hypothesis that women tend to be, on average, safer as pedestrians than men, particularly as teenagers and in early adulthood. Explain which of the two models fit is more appropriate for addressing this research question. -->
 
-To address this research question, we need to look at a model that contains intersection between `sex` and `age` in order to compare the probability of male and female getting fatal injuries when they are teenagers and in early adulthood. Thus `theGlmInt` is a better option.
+To address this research question, we would need to use to a model that contains intersection between `sex` and `age` in order to compare the probability of male and female getting fatal injuries when they are teenagers and in early adulthood. Thus `theGlmInt` is more appropriate.
 
-<!-- TODO: odds and graphs contradict? -->
-By looking at the intersection estimated log odds for `sexFemale:age16 - 20`, we see that the estimated log odds is $0.150$ with a p-value of $0.016$. Assuming using a standard significance level of $\alpha = 0.05$, this result is significant. By exponentiating this value, we obtain an odds value of $\exp(0.150) = 1.16$. This indicates that within the age group between 16 to 20-year-olds, the odds of a female getting fatal injury is greater than a male getting fatal injury. This suggests that the hypothesis that women tend to be, on average, safer as pedestrians than men, particularly as teenagers and in early adulthood is false.
+First we look at the Odds Ratio Table. By looking at the `sex` section under `model2`, we see that the $95\%$ confidence interval for the odds of `female` is $(0.53,0.63)$, which is less than $1$. This suggests that with $95\%$ confidence, comparing to males, females have lower odds of receiving fatal injuries.
 
-By looking at the probability against age graph, within the age range around 15-20 years old, males have a higher probability of getting fatal injuries in motor accidents than female do, and the $99\%$ confidence intervals do not overlap. This supports the hypothesis that women tend to be, on average, safer as pedestrians than men, particularly as teenagers and in early adulthood is false.
+Then we look at the intersection term in the `sex:age` section in the table. We define young adults to be the age group from 16 to 25 years old. For age between $16$ to $20$, we see that `Female:16-20` has $95\%$ confidence interval of $(1.03,1.31)$. This is slightly greater than $1$, suggesting that females at the age of $16-20$ have a slightly larger odds of receiving fatal injuries than males at the same age. For age between $21$ and $25$, we see that `Female:21-25` has $95\%$ confidence interval of $(0.84,1.10)$. This interval includes $1$, thus we cannot conclude whether females at the age of $21-25$ have different probability of receiving fatal injuries than males at the same age. 
+
+Combining the two intersection results, we can conclude that the intersections between `sex` and `weight` do not weigh heavily in determing whether females have higher probability of receiving fatal injury.
+
+This is also confirmed by the probability against age graph. Within the age range around $16-25$ years old, males have a higher probability of getting fatal injuries in motor accidents than female do, and the $99\%$ confidence intervals do not overlap.
+
+Combining these two evidence, we can say that the hypothesis that women tend to be, on average, safer as pedestrians than men, particularly as teenagers and in early adulthood is true.
 
 
 ## Question 3.c
 
 <!-- It is well established that women are generally more willing to seek medical attention for health problems than men, and it is hypothesized that men are less likely than women to report minor injuries caused by road accidents. Write a critical assessment of whether or not the control group is a valid one for assessing whether women are on average better at road safety than man. -->
 
-<!-- TODO: What does it mean for a valid control group -->
-The control group is not a valid one for assessing whether women are on average better at road safety than man. This is because in the control group, people are still injured and not completely healthy. As stated in the question, men may be less likely than women to report minor injuries caused by road accidents, which leads to skewed data. A valid control group could be sampled from police reports of motor accedents where pedastrians involved were not injured at all. However, this is very difficult to sample, so we can only rely on the given data for now.
+The control group is not a valid one for assessing whether women are on average better at road safety than man. This is because if the claim that men are less likely than women to report minor injuries caused by road accidents is true, the control group for male will be biased, and will be underrepresented. This violates the assumption that object inclusion in the study doesn't depend on covariates. In this specific case, the sex of the patient is a covariate, and males not seeking medical attention prevents participation in the study. For the control group to be valid, gender should not prevent participation of the study.
 
 
 <!-- \newpage -->
