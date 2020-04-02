@@ -1,0 +1,343 @@
+---
+title: "A3 Soln"
+author: "Xiangyu Kong, 1002109620"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE, message=FALSE}
+# packages
+library(tidyverse)
+library(glmmTMB)
+
+# chunk options
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  tidy.opts = list(width.cutoff = 60)
+)
+
+# Set random seed
+set.seed(9620)
+```
+
+
+# Question 1
+
+``` {r 1. read data}
+birth_file = 'birthData.rds' 
+if (!file.exists(birth_file)) {
+  download.file('http://pbrown.ca/teaching/303/data/birthData.rds',
+                birth_file)
+}
+x = readRDS(birth_file)
+```
+
+``` {r 1. process data}
+# a unique urban / hispanic indicator
+x$bygroup = factor(gsub(
+  "[[:space:]]",
+  "",
+  paste0(x$MetroNonmetro, x$MothersHispanicOrigin)
+))
+x$timeInt = as.numeric(x$time)
+x$y = as.matrix(x[, c('Male', 'Female')])
+x$sin12 = sin(x$timeInt / 365.25)
+x$cos12 = cos(x$timeInt / 365.25)
+x$sin6 = sin(2 * x$timeInt / 365.25)
+x$cos6 = cos(2 * x$timeInt / 365.25)
+baselineDate = as.Date('2007/1/1')
+baselineDateInt = as.integer(baselineDate)
+```
+
+``` {r 1. gam}
+res = mgcv::gam(
+  y ~ bygroup +
+    cos12 + sin12 + cos6 + sin6 +
+    s(timeInt, by = bygroup, k = 120, pc = baselineDateInt),
+  data = x,
+  family = binomial(link = 'logit')
+)
+```
+
+``` {r 1. gamm}
+res2 = gamm4::gamm4(
+  y ~ bygroup +
+    cos12 + sin12 + cos6 + sin6 +
+    s(timeInt, by = bygroup, k = 120, pc = baselineDateInt),
+  random = ~ (1 | bygroup:timeInt),
+  data = x,
+  family = binomial(link = 'logit')
+)
+```
+
+``` {r 1. coefs}
+coefGamm = summary(res2$mer)$coef 
+
+knitr::kable(cbind(mgcv::summary.gam(res)$p.table[, 1:2],
+                   coefGamm[grep("^Xs[(]", rownames(coefGamm), invert = TRUE), 1:2]),
+             digits =5)
+
+1/sqrt(res$sp)
+
+lme4::VarCorr(res2$mer)
+```
+
+``` {r 1. predict seasonally adjusted time trend}
+timeJan = as.numeric(as.Date('2010/1/1')) / 365.25
+
+toPredict = expand.grid(
+  timeInt = as.numeric(seq(
+    as.Date('2007/1/1'), as.Date('2018/12/1'), by = '1 day'
+  )),
+  bygroup = c('MetroHispanicorLatino', 'NonmetroNotHispanicorLatino'),
+  cos12 = cos(timeJan),
+  sin12 = sin(timeJan),
+  cos6 = cos(timeJan / 2),
+  sin6 = sin(timeJan / 2)
+)
+
+predictGam = mgcv::predict.gam(res, toPredict, se.fit = TRUE)
+predictGamm = predict(res2$gam, toPredict, se.fit = TRUE)
+```
+
+``` {r 1. predict random effects}
+ranef2 = lme4::ranef(res2$mer, condVar = TRUE, whichel = 'bygroup:timeInt')
+ranef2a = exp(cbind(est = ranef2[[1]][[1]], 
+                    se = sqrt(attributes(ranef2[[1]])$postVar))
+              %*% Pmisc::ciMat())
+```
+
+## 1.
+
+*Write down statistical models corresponding to res and res2*
+
+**Answer:**
+
+TODO
+
+## 2. 
+
+*Which of the two sets of results is more useful for investigating this research hypothesis?*
+
+**Answer:**
+
+TODO
+
+## 3. 
+
+*Write a short report (a paragraph or two) addressing the following hypothesis: The long-term trend in sex ratios for urban Hispanics and rural Whites is consistent with the hypothesis that discrimination against Hispanics, while present in the full range of the dataset, has been increasing in severity over time.*
+
+**Answer:**
+
+TODO
+
+## 4.
+
+*Write a short report addressing the following hypothesis: The election of Trump in November 2016 had a noticeable effect on the sex ratio of Hispanic-Americans roughly 5 months after the election.*
+
+**Answer:**
+
+TODO
+
+
+# Question 2
+
+``` {r 2. read data}
+if(!requireNamespace("nCov2019")) {
+  devtools::install_github("GuangchuangYu/nCov2019")
+}
+
+x1 <- nCov2019::load_nCov2019(lang = 'en')
+
+hubei = x1$province[which(x1$province$province == 'Hubei'), ]
+hubei$deaths = c(0, diff(hubei$cum_dead))
+
+italy = x1$global[which(x1$global$country == 'Italy'), ]
+italy$deaths = c(0, diff(italy$cum_dead))
+
+x = list(Hubei = hubei, Italy = italy)
+```
+
+``` {r 2. plot}
+for (D in names(x)) {
+  plot(x[[D]][, c('time', 'deaths')], xlim = as.Date(c('2020/1/10', '2020/4/1')))
+}
+```
+
+``` {r 2. process data}
+x$Hubei$weekday = format(x$Hubei$time, '%a') 
+x$Italy$weekday = format(x$Italy$time, '%a') 
+x$Italy$timeInt = as.numeric(x$Italy$time) 
+x$Hubei$timeInt = as.numeric(x$Hubei$time) 
+x$Italy$timeIid = x$Italy$timeInt 
+x$Hubei$timeIid = x$Hubei$time
+```
+
+``` {r 2. gamm italy}
+gamItaly = gamm4::gamm4(
+  deaths ~ weekday + s(timeInt, k = 40),
+  random = ~ (1 | timeIid),
+  data = x$Italy,
+  family = poisson(link = 'log')
+)
+```
+
+``` {r 2. gamm hubei}
+gamHubei = gamm4::gamm4(
+  deaths ~ weekday + s(timeInt, k = 100),
+  random = ~ (1 | timeIid),
+  data = x$Hubei,
+  family = poisson(link = 'log')
+)
+```
+
+``` {r 2. gamm results}
+lme4::VarCorr(gamItaly$mer)
+lme4::VarCorr(gamHubei$mer)
+knitr::kable(cbind(summary(gamItaly$mer)$coef[, 1:2],
+                   summary(gamHubei$mer)$coef[, 1:2]),
+             digits = 3)
+
+toPredict = data.frame(time = seq(as.Date('2020/1/1'), as.Date('2020/4/10'),
+                                  by = '1 day'))
+toPredict$timeInt = as.numeric(toPredict$time)
+toPredict$weekday = 'Fri'
+Stime = pretty(toPredict$time)
+
+matplot(
+  toPredict$time,
+  exp(do.call(
+    cbind,
+    mgcv::predict.gam(gamItaly$gam, toPredict, se.fit = TRUE)
+  )
+  %*% Pmisc::ciMat()),
+  col = 'black',
+  lty = c(1, 2, 2),
+  type = 'l',
+  xaxt = 'n',
+  xlab = '',
+  ylab = 'count',
+  ylim = c(0.5, 5000),
+  xlim = as.Date(c('2020/2/20', '2020/4/5'))
+)
+axis(1, as.numeric(Stime), format(Stime, '%d %b'))
+points(x$Italy[, c('time', 'deaths')], col = 'red')
+matplot(
+  toPredict$time,
+  exp(do.call(
+    cbind,
+    mgcv::predict.gam(gamItaly$gam, toPredict, se.fit = TRUE)
+  )
+  %*% Pmisc::ciMat()),
+  col = 'black',
+  lty = c(1, 2, 2),
+  type = 'l',
+  xaxt = 'n',
+  xlab = '',
+  ylab = 'count',
+  ylim = c(0.5, 5000),
+  xlim = as.Date(c('2020/2/20', '2020/4/5')),
+  log = 'y'
+)
+axis(1, as.numeric(Stime), format(Stime, '%d %b'))
+points(x$Italy[, c('time', 'deaths')], col = 'red')
+
+matplot(
+  toPredict$time,
+  exp(do.call(
+    cbind,
+    mgcv::predict.gam(gamHubei$gam, toPredict, se.fit = TRUE)
+  ) %*% Pmisc::ciMat()),
+  col = 'black',
+  lty = c(1, 2, 2),
+  type = 'l',
+  xaxt = 'n',
+  xlab = '',
+  ylab = 'count',
+  xlim = as.Date(c('2020/1/20', '2020/4/5'))
+)
+axis(1, as.numeric(Stime), format(Stime, '%d %b'))
+points(x$Hubei[, c('time', 'deaths')], col =
+         'red')
+
+matplot(
+  toPredict$time,
+  exp(do.call(
+    cbind,
+    mgcv::predict.gam(gamHubei$gam, toPredict, se.fit = TRUE)
+  ) %*% Pmisc::ciMat()),
+  col = 'black',
+  lty = c(1, 2, 2),
+  type = 'l',
+  xaxt = 'n',
+  xlab = '',
+  ylab = 'count',
+  xlim = as.Date(c('2020/1/20', '2020/4/5')),
+  log = 'y',
+  ylim = c(0.5, 200)
+)
+axis(1, as.numeric(Stime), format(Stime, '%d %b'))
+points(x$Hubei[, c('time', 'deaths')], col = 'red')
+```
+
+## 1.
+
+*Write a down the statistical model corresponding to the gamm4 calls above, explaining in words what all of the variables are.*
+
+**Answer:**
+
+TODO
+
+## 2. 
+
+*Write a paragraph describing, in non-technical terms, what information the data analysis presented here is providing. Write text suitable for a short ‘Research News’ article in a University of Toronto news publication, assuming the audience knows some basic statistics but not much about non-parametric modelling.*
+
+**Answer:**
+
+TODO
+
+## 3.
+
+*Explain, for each of the tests below, whether the test is a valid LR test and give reasons for your decision.*
+
+``` {r lrtests}
+Hubei2 = gamm4::gamm4(
+  deaths ~ 1 + s(timeInt, k = 100),
+  random = ~ (1 | timeIid),
+  data = x$Hubei,
+  family = poisson(link = 'log'),
+  REML = FALSE
+)
+Hubei3 = mgcv::gam(
+  deaths ~ weekday + s(timeInt, k = 100),
+  data = x$Hubei,
+  family = poisson(link = 'log'),
+  method = 'ML'
+)
+Hubei4 = lme4::glmer(
+  deaths ~ weekday + timeInt + (1 | timeIid),
+  data = x$Hubei,
+  family = poisson(link = 'log')
+)
+
+lmtest::lrtest(Hubei2$mer, gamHubei$mer)
+nadiv::LRTest(logLik(Hubei2$mer), logLik(gamHubei$mer), boundaryCorrect = TRUE)
+lmtest::lrtest(Hubei3, gamHubei$mer)
+nadiv::LRTest(logLik(Hubei3), logLik(gamHubei$mer), boundaryCorrect = TRUE)
+lmtest::lrtest(Hubei4, gamHubei$mer)
+nadiv::LRTest(logLik(Hubei4), logLik(gamHubei$mer), boundaryCorrect = TRUE)
+lmtest::lrtest(Hubei2$mer, Hubei3)
+nadiv::LRTest(logLik(Hubei2$mer), logLik(Hubei3), boundaryCorrect = TRUE)
+```
+
+**Answer:**
+
+TODO
+
+<!-- \newpage -->
+<!-- # Appendix -->
+
+<!-- ```{r ref.label=knitr::all_labels(), echo = T, eval = F} -->
+<!-- ``` -->
