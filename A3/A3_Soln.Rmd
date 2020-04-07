@@ -8,11 +8,11 @@ output:
 
 ```{r setup, include=FALSE, message=FALSE}
 # packages
-library(tidyverse)
 library(glmmTMB)
 library(gamm4)
-library(mgcv)
 library(knitr)
+library(mgcv)
+library(tidyverse)
 
 # chunk options
 knitr::opts_chunk$set(
@@ -113,6 +113,8 @@ ranef2a = exp(cbind(est = ranef2[[1]][[1]],
               %*% Pmisc::ciMat())
 ```
 
+
+\pagebreak
 ## 1.
 
 *Write down statistical models corresponding to res and res2*
@@ -123,8 +125,8 @@ The statistical model for `res` is
 
 $$
 \begin{aligned}
-  Y_{i} &\sim Binomial(\lambda_{i}, N_{i}) \\
-  h(\lambda_{i}) = log(\frac{\lambda_{i}}{1 - \lambda_{i}}) 
+  Y_{i} &\sim Binomial(N_{i}, p_{i}) \\
+  h(p_{i}) = log(\frac{p_{i}}{1 - p_{i}}) 
    & = X_{i} \beta + f(W_{j}; v) + \epsilon_{i}
 \end{aligned}
 $$
@@ -132,14 +134,14 @@ $$
 Where
 
 - $Y_{i}$ is the response variable. It represents the number of babies that are males for group $i$.
-- $\lambda_{i}$ is the proportion of male babies in group $i$.
+- $p_{i}$ is the proportion of male babies in group $i$.
 - $N_{i}$ is the total number of babies in group $i$.
-- $h(\lambda_{i})$ is the logit link function.
+- $h(p_{i})$ is the logit link function.
 - $X_{i}$, $W_{i}$ are the covariates.
-  - $X_{i}$ contain indicator variable `bygroup`, numerical variables representing 12 months frequency: `cos12`, `sin12`, and 6 months frequency: `cos6`, `sin6`
-  - $W_{i}$ contain numeric variable `timeInt`, category variable `bygroup` and their interactions.
+  - $X_{i}$ contains indicator variable `bygroup` (combination of `MetroNonmetro` and `MothersHispanicOrigin`, 4 levels), numerical variables representing 12 months frequency: `cos12`, `sin12`, and 6 months frequency: `cos6`, `sin6`
+  - $W_{i}$ contain numeric variable `timeInt` (the date of birth represented in numeric), interacting with indicator variable `bygroup`.
 - $\beta$ are the parameters.
-- $f(w; v)$ are the smoothing functions of `timeInt` interacting with `bygroup`, with smoothness parameter $v$.
+- $f(w; v)$ are the smoothing functions of `timeInt` interacting with `bygroup`, with smoothness parameter $v$, up to $120$ knots.
 - $\epsilon_{i}$ are residuals for group $i$.
 
 
@@ -147,68 +149,89 @@ The statistical model for `res2` is
 
 $$
 \begin{aligned}
-  Y_{ij} ~ | ~ A_{i}, B_{ij} &\sim Binomial(\lambda_{ij}, N_{ij}) \\
-  h(\lambda_{ij}) = log(\frac{\lambda_{ij}}{1 - \lambda_{ij}}) 
-   & = X_{ij} \beta + A_{i} + B_{ij} + f(W_{ij}; v) + \epsilon_{ij} \\
-  A_{i} &\sim N(0, \sigma_{A}^{2}) \\
-  B_{ij} &\sim N(0, \sigma_{B}^{2})
+  Y_{it} ~ | ~ U_{it} &\sim Binomial(p_{it}, N_{it}) \\
+  h(p_{it}) = log(\frac{p_{it}}{1 - p_{it}}) 
+   & = X_{it} \beta + U_{it} + f(W_{it}; v) + \epsilon_{it} \\
+  U_{it} &\sim N(0, \sigma_{U}^{2})
 \end{aligned}
 $$
 
 Where
 
-- $Y_{ij}$ is the response variable. It represents the number of babies that are males for group $ij$.
-- $\lambda_{ij}$ is the proportion of male babies in group $ij$.
-- $N_{ij}$ is the total number of babies in group $ij$.
-- $h(\lambda_{ij})$ is the logit link function.
-- $X_{ij}$, $W_{i}$ are the covariates.
-  - $X_{i}$ contain indicator variable `bygroup`, numerical variables representing 12 months frequency: `cos12`, `sin12`, and 6 months frequency: `cos6`, `sin6`
-  - $W_{i}$ contain numeric variable `timeInt`, category variable `bygroup` and their interactions.
+- $Y_{it}$ is the response variable. It represents the number of babies that are males for time $t$ in bygroup level $i$.
+- $p_{it}$ is the proportion of male babies for time $t$ in bygroup level $i$.
+- $N_{it}$ is the total number of babies for time $t$ in bygroup level $i$.
+- $h(p_{it})$ is the logit link function.
+- $X_{it}$, $W_{it}$ are the covariates.
+  - $X_{it}$ contain indicator variable `bygroup` (combination of `MetroNonmetro` and `MothersHispanicOrigin`, 4 levels), numerical variables representing 12 months frequency: `cos12`, `sin12`, and 6 months frequency: `cos6`, `sin6`
+  - $W_{it}$ contain numeric variable `timeInt` (the date of birth represented in numeric), interacting with indicator variable `bygroup`.
 - $\beta$ are the parameters.
-- $A_{i}$ is the $i$th `bygroup`'s deviation from the population average
-- $B_{ij}$ is the $i$th `bygroup`'s $j$'s `timeInt`'s deviation from the population average.
-- $f(w; v)$ are the smoothing functions of `timeInt` interacting with `bygroup`, with smoothness parameter $v$.
-- $\epsilon_{i}$ are residuals for group $i$.
+- $U_{it}$ is the $i$th `bygroup` level's $t$th `timeInt`'s deviation from the population average.
+- $f(w; v)$ are the smoothing functions of `timeInt` interacting with `bygroup`, with smoothness parameter $v$, up to $120$ knots.
+- $\epsilon_{it}$ are residuals for group $it$.
 
 
-## 2. 
+\pagebreak
+## 2.
 
 *Which of the two sets of results is more useful for investigating this research hypothesis?*
 
 **Answer:**
 
+<!-- res -->
+
+<!-- The results for `res` is more useful for investigating the hypothesis that stress induced by Trump’s election is affecting the sex ratio at birth. -->
+
+<!-- The different between `res` and `res2` is that `res` is smoothed with generalized cross validation, where as `res2` is smoothed with maximum likelihood, and contains a random effect of `timeInt` interacting with `bygroup`. -->
+
+<!-- From Figure 2 we can see that the predicted time trends for `res` is more wiggly, indicating that the model explains short-term trend well. The predicted time trend for `res2` is smoother and straighter, indicating that the model is more suited for explaining long-term trend. The hypothesis focuses on a specific period of time (after Trump's election), so a short term model (`res`) will explain the trend better. -->
+
+<!-- From Figure 3, we can see that the random effects for `res2` are very similar. Both the exponentiated effects are scattered around $1.00$ level, so the effects are almost $0$. This suggests that we potentially do not need the random effects. -->
+
+<!-- Since we potentially do not need the random effects, and `res` explains the short-term effects better than `res2`, `res` is more suited to investicating this research hypothesis. -->
+
+<!-- res2 -->
 The results for `res2` is more useful for investigating the hypothesis that stress induced by Trump’s election is affecting the sex ratio at birth.
 
-The difference between the models `res` and `res2` is that `res2` contains random effects of `timeInt` nested within `bygroup` giving the model random intercepts. This accounts for the grouped effect introduced by race and areas and the time.
+The difference between `res` and `res2` is that `res` is smoothed with generalized cross validation, where as `res2` is smoothed with maximum likelihood, and contains a random effect of `timeInt` interacting with `bygroup`.
 
-Considering the statement that Rural whites voted for Trump in large numbers, and would presumably not be stressed by the results of the election, and Urban areas voted against Trump for the most part, and Americans of Hispanic origin had many reasons to be anxious following Trump’s election, it seems appropriate to use the grouping effect to explain the variations caused by region and race.
+From Figure 3, we can see that the random effects for `res2` are very similar. Both the exponentiated effects are scattered around $1.00$ level, so the effects are almost $0$. This suggests that we potentially do not need the random effects.
 
-This is also confirmed according to the prediction graphs (Figure 2: Predicted time trends). For `res`, the predicted lines fluctuate too much. The plot for `res2` is smoother and illustrates the trend better.
+From Figure 2 we can see that the predicted time trends for `res` is more wiggly. The red fitted line for `NonmetroNotHispanicorLatino` fluctuates a great deal and does not provide a clear indication of the trend. The predicted time trend for `res2` is smoother and straighter, indicating that the model is more suited for explaining the trend. 
 
-## 3. TODO
+The hypothesis focuses on the trend before and after Trump's election. Although we potentially do not need the random effects, `res2` explains the trend better than `res`, so `res2` is more suited to investicating this research hypothesis.
+
+
+\pagebreak
+## 3.
 
 *Write a short report (a paragraph or two) addressing the following hypothesis: The long-term trend in sex ratios for urban Hispanics and rural Whites is consistent with the hypothesis that discrimination against Hispanics, while present in the full range of the dataset, has been increasing in severity over time.*
 
 **Answer:**
 
-In order to address the hypothesis that discrimination against Hispanics, while present in the full range of the dataset, has been increasing in severity over time, we look at results from the model `res2`.
+Using the model selected from part 2, we look at results produced by `res2`.
 
-By looking at the prediction graphs (Figure 2: Predicted time trends), the predictions for `res2` presents a smoother curve compared to that of `res`. From the graph, we see that rural Whites have a relatively flat curve while urban Hispanics has a downward trend. This indicates that over the timespan of 2007 to 2019, the ratio of male to female babies remains relatively the same for rural Whites and the ratio of male to female babies decreases for urban Hispanic. The random effects graph (Figure 3: bygroup:timeInt random effects) indicates that the variability explained by `bygroup:timeInt` has remained the same from 2013 to 2019. 
+By looking at the prediction graphs (Figure 2: Predicted time trends), the predictions for `res2` presents two smooth curves. From the graph, we see that rural Whites have a relatively flat curve while urban Hispanics has a downward trend. This indicates that over the timespan of 2007 to 2019, the ratio of male to female babies remains relatively the same for rural Whites, and the ratio of male to female babies decreases for urban Hispanic. The two lines diverge as time progress, meaning that the difference of male to female ratio between rural Whites and urban Hispanic increases over time. 
 
-Combining the two graphs, we conclude that the ratio of male to female babies decreases for urban Hispanic and remain roughly the same for rural Whites. The long-term trend is consistent with the hypothesis that discrimination against Hispanics, while present in the full range of the dataset, has been increasing in severity over time. Thus we agree with the hypothesis.
+The $95\%$ confidence intervals only barely overlapp on the left side, and do not overlap for most of the time, indidcating that this increasing difference is significant.  
 
-## 4. TODO
+Combining the two satements that stress during pregnancy reduces the number of male babies, and racial discrimination increases stress, we can say that the increasing difference of male to female ratio between rural Whites and urban Hispanic (urban Hispanic having the lower ratio) suggests that the stress for urban Hispanic might be higher over time, and could further indicate that the discrimination against Hispanics has been increasing in severity over time.
+
+\pagebreak
+## 4.
 
 *Write a short report addressing the following hypothesis: The election of Trump in November 2016 had a noticeable effect on the sex ratio of Hispanic-Americans roughly 5 months after the election.*
 
 **Answer:**
 
-In order to address the hypothesis that the election of Trump in November 2016 had a noticeable effect on the sex ratio of Hispanic-Americans roughly 5 months after the election, we look at results from the model `res`.
+Using the model selected from part 2, we look at results produced by `res2`.
 
-`res2` explains the general trend of the data, but does not explain the effect precisely to months. `res` explains month to month differences in more detail. 
+By looking at the prediction graphs (Figure 2: Predicted time trends), the predictions for `res2` presents two smooth curves. From the graph, we see that urban Hispanics has a downward trend. This indicates that over the timespan of 2007 to 2019, the ratio of male to female babies decreases for urban Hispanic. The line is relatively straight, meaning from 2007 to 2019, the rate of decreasing (coresponding to the slope of the graph) is constant.
 
-5 months after November 2016 (including November), is March 2017. From the prediction graphs (Figure 2: Predicted time trends), after the vertical line at March 2017, 
+If Trump's election had a noticable effect on the sex ratio of Hispanic-Americans, the rate of the decreasing of male to female ratio would be changed, resulting in a different slope and a more wiggly line after November 2016. However, this was not shown in the prediction graph. The straight line after November 2016 with constant slope suggests that Trump's election did not have a noticable effect on the sex ratio of Hispanic-Americans. Thus we can reject the hypothesis that the election of Trump in November 2016 had a noticeable effect on the sex ratio of Hispanic-Americans roughly 5 months after the election.
 
+
+\pagebreak
 # Question 2
 
 ``` {r 2. read data}
@@ -349,13 +372,16 @@ axis(1, as.numeric(Stime), format(Stime, '%d %b'))
 points(x$Hubei[, c('time', 'deaths')], col = 'red')
 ```
 
+
+\pagebreak
 ## 1.
 
-*Write a down the statistical model corresponding to the gamm4 calls above, explaining in words what all of the variables are.*
+*Write down the statistical model corresponding to the gamm4 calls above, explaining in words what all of the variables are.*
 
 **Answer:**
 
-The model corresponding to `gamItaly` and `gamHubei` is 
+The model corresponding to `gamItaly` is 
+
 $$
 \begin{aligned}
   Y_{i} ~ | ~ A_{i} &\sim Poisson(\lambda_{i}) \\
@@ -367,15 +393,40 @@ $$
 
 Where
 
-- $Y_{i}$ is the response variable. It represents the number of deaths for group $i$.
+- $Y_{i}$ is the response variable. It represents the number of deaths for group $i$ in Italy.
 - $\lambda_{i}$ is the mean number of deaths for group $i$.
 - $h(\lambda_{i})$ is the log link function.
 - $X_{i}$, $W_{i}$ are the covariates.
-  - $X_{i}$ contain indicator variable `weekday`.
-  - $W_{i}$ contain numeric variable `timeInt`.
+  - $X_{i}$ contain indicator variable `weekday` the day of the week (7 levels).
+  - $W_{i}$ contain numeric variable `timeInt` a numeric representation of date.
 - $\beta$ are the parameters.
-- $A_{i}$ is the $i$th `timeIid`'s deviation from the population average. In this case, every day has its own random intercept.
-- $f(w; v)$ are the smoothing functions of `timeInt` interacting with `bygroup`, with smoothness parameter $v$.
+- $A_{i}$ is the $i$th `timeIid`'s (numeric representation of date) deviation from the population average. In this case, every day has its own random intercept.
+- $f(w; v)$ are the smoothing functions of `timeInt`, with smoothness parameter $v$, up to $40$ knots.
+- $\epsilon_{i}$ are residuals for group $i$.
+
+
+The model corresponding to `gamHubei` is 
+
+$$
+\begin{aligned}
+  Y_{i} ~ | ~ A_{i} &\sim Poisson(\lambda_{i}) \\
+  h(\lambda_{i}) = log(\lambda_{i}) 
+   & = X_{i} \beta + A_{i} + f(W_{i}; v) + \epsilon_{i} \\
+  A_{i} &\sim N(0, \sigma_{A}^{2})
+\end{aligned}
+$$
+
+Where
+
+- $Y_{i}$ is the response variable. It represents the number of deaths for group $i$ in Hubei.
+- $\lambda_{i}$ is the mean number of deaths for group $i$.
+- $h(\lambda_{i})$ is the log link function.
+- $X_{i}$, $W_{i}$ are the covariates.
+  - $X_{i}$ contain indicator variable `weekday` the day of the week (7 levels).
+  - $W_{i}$ contain numeric variable `timeInt` a numeric representation of date.
+- $\beta$ are the parameters.
+- $A_{i}$ is the $i$th `timeIid`'s (string representation of date) deviation from the population average. In this case, every day has its own random intercept.
+- $f(w; v)$ are the smoothing functions of `timeInt`, with smoothness parameter $v$, up to $100$ knots.
 - $\epsilon_{i}$ are residuals for group $i$.
 
 The difference between the two models are
@@ -384,23 +435,28 @@ The difference between the two models are
 - $f(w; v)$ has different number of knots. `gamItaly`'s smoothing function has up to $40$ knots where as `gamHubei`'s smoothing function has up to $100$ knots.
 
 
+\pagebreak
 ## 2. 
 
 *Write a paragraph describing, in non-technical terms, what information the data analysis presented here is providing. Write text suitable for a short ‘Research News’ article in a University of Toronto news publication, assuming the audience knows some basic statistics but not much about non-parametric modelling.*
 
 **Answer:**
 
-The log standard deviation for `timeInt` random effect in Italy is 0.10172. This means that each day explains `r round(exp(0.10172)^2, digits = 4)` of the variance in death cases in Italy.
+<!-- The log standard deviation for `timeInt` random effect in Italy is 0.10172. This means that each day explains `r round(exp(0.10172)^2, digits = 4)` of the variance in death cases in Italy. -->
 
-The log standard deviation for `timeInt` random effect in Hubei is 0.41303. This means that each day explains `r round(exp(0.41303)^2, digits = 4)` of the variance in death cases in Hubei.
+<!-- The log standard deviation for `timeInt` random effect in Hubei is 0.41303. This means that each day explains `r round(exp(0.41303)^2, digits = 4)` of the variance in death cases in Hubei. -->
 
-On a typical Friday in Italy, it is likely to have `r round(exp(1.000), digits = 4)` death cases. Comparing to Fridays, Monday to Thursday and Saturday tend to have more death cases, and Sunday tend to have less death cases.
+On a typical Friday in Italy, it is likely to have $exp(1.000) = 1$ death cases. Using a $95\%$ confindence interval ($effect \pm 2 \times se$), we can see that only Monday's confidence interval does not include 0. This means that with $95\%$ confidence, we can say that comparing to Friday, monday is more likely to have higher number of death cases in Italy, where as other days do not have a significant effect on the number of death cases in Italy.
 
-On a typical Friday in Hubei, it is likely to have `r round(exp(-1.493), digits = 4)` death cases. Comparing to Fridays, only Sunday tends to have more death cases, and the other days tend to have less death cases.
+On a typical Friday in Hubei, it is likely to have $exp(-1.493) = 0.2247$ death cases. Using a $95\%$ confindence interval ($effect \pm 2 \times se$), we can see that all confidence intervals include 0. This means that the days of the week do not have a signifancant effect on the number of death cases in Hubei.
 
-According to the prediction graphs, Italy's death cases seems to be increasing in the future, because the predicted lines and its $95\%$ confidence interval both indicate an upward growth. Hubei's death cases seems to be decreasing in the future. However, the $95\%$ confidence interval is not consistent with the point estimate of the prediction. This indicates that although we predict Hubei's death cases will decrease, we cannot make this claim with great confidence, and it is possible that Hubei's death cases will increase in the future.
+According to the prediction graphs in Figure 5, Italy's death cases seems to be increasing in the future, because the predicted lines and its $95\%$ confidence interval both indicate an upward growth. Hubei's death cases seems to be decreasing in the future. However, the $95\%$ confidence interval seems to diverge. This indicates that although we predict Hubei's death cases will decrease, we cannot make this claim with great confidence, and it is possible that Hubei's death cases will increase in the future.
 
-## 3. TODO
+If the COVID19 spread trend for Italy and Hubei are similar, we can say that Italy has not yet reached the peak of death cases, and there might be more in the future. As for Hubei, it seems that it has already reached its peak, but we can not make a confident claim about what will happen in the future.
+
+
+\pagebreak
+## 3.
 
 *Explain, for each of the tests below, whether the test is a valid LR test and give reasons for your decision.*
 
@@ -442,21 +498,21 @@ nadiv::LRTest(logLik(Hubei2$mer), logLik(Hubei3), boundaryCorrect = TRUE)
 
 **Answer:**
 
-`lmtest::lrtest(Hubei2$mer, gamHubei$mer)` is a valid LR test because `Hubei2` is nested within `gamHubei`. `Hubei2` is the special case when `gamHubei` removes the `weekday` covariate and uses mean instead.
+- `lmtest::lrtest(Hubei2$mer, gamHubei$mer)` is a valid LR test because `Hubei2` is nested within `gamHubei`. `Hubei2` is the special case when `gamHubei` removes the `weekday` covariate and uses mean instead.
 
-`nadiv::LRTest(logLik(Hubei2$mer), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is a valid LR test because `Hubei2` is nested within `gamHubei`. `Hubei2` is the special case when `gamHubei` removes the `weekday` covariate and uses mean instead. By doing so, the parameter is dropped from the full model (`gamHubei`) was on the boundary of its parameter space.
+- `nadiv::LRTest(logLik(Hubei2$mer), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is not a valid LR test because although `Hubei2` is nested within `gamHubei`, we are not testing for the random effect. `gamHubei` and `Hubei2` contain the same random effects (smothing on `timeInt` and random effect of `timeIid`). `boundaryCorrect` should only be set to TRUE when we are testing for random effects.
 
-`lmtest::lrtest(Hubei3, gamHubei$mer)` is a valid LR test because `Hubei3` is nested within `gamHubei`. It is equivalent to setting the random effect `timeIid` to $0$ in gamHubei.
+- `lmtest::lrtest(Hubei3, gamHubei$mer)` is not a valid LR test because although `Hubei3` is nested within `gamHubei`, the difference between the two model is the random effect of `timeIid`. To test for the random effect being significant, it is better to use `nadiv::LRTest`.
 
-`nadiv::LRTest(logLik(Hubei3), logLik(gamHubei$mer), boundaryCorrect = TRUE)` TODO
+- `nadiv::LRTest(logLik(Hubei3), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is a valid LR test because `Hubei3` is nested within `gamHubei`. It is equivalent to setting the random effect `timeIid` to $0$ in gamHubei. by setting `boundaryCorrect = TRUE`, we are testing the significance for the random effect of `timeIid`.
 
-`lmtest::lrtest(Hubei4, gamHubei$mer)` is a valid LR test because `Hubei4` is nested within `gamHubei`. It is equivalent to using straight lines as `f(timeInt)` in `gamHubei`.
+- `lmtest::lrtest(Hubei4, gamHubei$mer)` is not a valid LR test because although `Hubei4` is nested within `gamHubei`. It is equivalent to using straight lines as `f(timeInt)` in `gamHubei`. By testing the two models, we will be testing the significance of the smoothing, which is a random effect. To test for the random effect being significant, it is better to use `nadiv::LRTest`.
 
-`nadiv::LRTest(logLik(Hubei4), logLik(gamHubei$mer), boundaryCorrect = TRUE)` TODO
+- `nadiv::LRTest(logLik(Hubei4), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is a valid LR test because `Hubei4` is nested within `gamHubei`. It is equivalent to using straight lines as `f(timeInt)` in `gamHubei`. by setting `boundaryCorrect = TRUE`, we are testing the significance for smoothing on `timeInt`.
 
-`lmtest::lrtest(Hubei2$mer, Hubei3)` is not a valid LR test because `Hubei2` and `Hubei3` are not nested. `Hubei2` contains a random effect of `timeIid`, which `Hubei3` does not. `Hubei3` has `weekday` as one of its covariates, but `Hubei2` does not. Thus the two models are not nested, and the LR test is inappropriate.
+- `lmtest::lrtest(Hubei2$mer, Hubei3)` is not a valid LR test because `Hubei2` and `Hubei3` are not nested. `Hubei2` contains a random effect of `timeIid`, which `Hubei3` does not. `Hubei3` has `weekday` as one of its covariates, but `Hubei2` does not. Thus the two models are not nested, and the LR test is inappropriate.
 
-`nadiv::LRTest(logLik(Hubei2$mer), logLik(Hubei3), boundaryCorrect = TRUE)` is not a valid LR test because `Hubei2` and `Hubei3` are not nested. `Hubei2` contains a random effect of `timeIid`, which `Hubei3` does not. `Hubei3` has `weekday` as one of its covariates, but `Hubei2` does not. Thus the two models are not nested, and the LR test is inappropriate.
+- `nadiv::LRTest(logLik(Hubei2$mer), logLik(Hubei3), boundaryCorrect = TRUE)` is not a valid LR test because `Hubei2` and `Hubei3` are not nested. `Hubei2` contains a random effect of `timeIid`, which `Hubei3` does not. `Hubei3` has `weekday` as one of its covariates, but `Hubei2` does not. Thus the two models are not nested, and the LR test is inappropriate.
 
 <!-- \newpage -->
 <!-- # Appendix -->
