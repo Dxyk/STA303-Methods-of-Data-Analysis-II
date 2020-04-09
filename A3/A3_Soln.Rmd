@@ -115,7 +115,7 @@ ranef2a = exp(cbind(est = ranef2[[1]][[1]],
 
 
 \pagebreak
-## 1.
+## Question 1.1
 
 *Write down statistical models corresponding to res and res2*
 
@@ -127,7 +127,7 @@ $$
 \begin{aligned}
   Y_{i} &\sim Binomial(N_{i}, p_{i}) \\
   h(p_{i}) = log(\frac{p_{i}}{1 - p_{i}}) 
-   & = X_{i} \beta + f(W_{j}; v) + \epsilon_{i}
+   & = X_{i} \beta + s(t_{i}) + f(W_{i}; v) + \epsilon_{i}
 \end{aligned}
 $$
 
@@ -138,10 +138,12 @@ Where
 - $N_{i}$ is the total number of babies in group $i$.
 - $h(p_{i})$ is the logit link function.
 - $X_{i}$, $W_{i}$ are the covariates.
-  - $X_{i}$ contains indicator variable `bygroup` (combination of `MetroNonmetro` and `MothersHispanicOrigin`, 4 levels), numerical variables representing 12 months frequency: `cos12`, `sin12`, and 6 months frequency: `cos6`, `sin6`
-  - $W_{i}$ contain numeric variable `timeInt` (the date of birth represented in numeric), interacting with indicator variable `bygroup`.
+  - $X_{i}$ contains indicator variable `bygroup` (combination of `MetroNonmetro` and `MothersHispanicOrigin`, 4 levels)
+  - $W_{i}$ contains numeric variable `timeInt` (the date of birth represented in numeric), interacting with indicator variable `bygroup`.
 - $\beta$ are the parameters.
 - $f(w; v)$ are the smoothing functions of `timeInt` interacting with `bygroup`, with smoothness parameter $v$, up to $120$ knots.
+- $t_{i}$ is the numeric variable `timeInt` in group $i$.
+- $s(t_{i})$ is seasonal cycle function of `timeInt`. It represents two frequencies: 12-month ($sin(\pi t_{i} / 365.25)$, $cos(\pi t_{i}$) and a 6-month ($sin(2 \pi t_{i} / 365.25)$, $cos(2 \pi t_{i} / 365.25)$).
 - $\epsilon_{i}$ are residuals for group $i$.
 
 
@@ -151,7 +153,7 @@ $$
 \begin{aligned}
   Y_{it} ~ | ~ U_{it} &\sim Binomial(p_{it}, N_{it}) \\
   h(p_{it}) = log(\frac{p_{it}}{1 - p_{it}}) 
-   & = X_{it} \beta + U_{it} + f(W_{it}; v) + \epsilon_{it} \\
+   & = X_{it} \beta + U_{it} + s(t_{i}) + f(W_{it}; v) + \epsilon_{it} \\
   U_{it} &\sim N(0, \sigma_{U}^{2})
 \end{aligned}
 $$
@@ -163,16 +165,18 @@ Where
 - $N_{it}$ is the total number of babies for time $t$ in bygroup level $i$.
 - $h(p_{it})$ is the logit link function.
 - $X_{it}$, $W_{it}$ are the covariates.
-  - $X_{it}$ contain indicator variable `bygroup` (combination of `MetroNonmetro` and `MothersHispanicOrigin`, 4 levels), numerical variables representing 12 months frequency: `cos12`, `sin12`, and 6 months frequency: `cos6`, `sin6`
-  - $W_{it}$ contain numeric variable `timeInt` (the date of birth represented in numeric), interacting with indicator variable `bygroup`.
+  - $X_{it}$ contains indicator variable `bygroup` (combination of `MetroNonmetro` and `MothersHispanicOrigin`, 4 levels).
+  - $W_{it}$ contains numeric variable `timeInt` (the date of birth represented in numeric), interacting with indicator variable `bygroup`.
 - $\beta$ are the parameters.
 - $U_{it}$ is the $i$th `bygroup` level's $t$th `timeInt`'s deviation from the population average.
 - $f(w; v)$ are the smoothing functions of `timeInt` interacting with `bygroup`, with smoothness parameter $v$, up to $120$ knots.
+- $t_{it}$ is the numeric variable `timeInt` for time $t$ in bygroup level $i$.
+- $s(t_{ij})$ is seasonal cycle function of `timeInt`. It represents two frequencies: 12-month ($sin(\pi t_{ij} / 365.25)$, $cos(\pi t_{ij}$) and a 6-month ($sin(2 \pi t_{ij} / 365.25)$, $cos(2 \pi t_{ij} / 365.25)$).
 - $\epsilon_{it}$ are residuals for group $it$.
 
 
 \pagebreak
-## 2.
+## Question 1.2
 
 *Which of the two sets of results is more useful for investigating this research hypothesis?*
 
@@ -203,7 +207,7 @@ The hypothesis focuses on the trend before and after Trump's election. Although 
 
 
 \pagebreak
-## 3.
+## Question 1.3
 
 *Write a short report (a paragraph or two) addressing the following hypothesis: The long-term trend in sex ratios for urban Hispanics and rural Whites is consistent with the hypothesis that discrimination against Hispanics, while present in the full range of the dataset, has been increasing in severity over time.*
 
@@ -217,8 +221,9 @@ The $95\%$ confidence intervals only barely overlapp on the left side, and do no
 
 Combining the two satements that stress during pregnancy reduces the number of male babies, and racial discrimination increases stress, we can say that the increasing difference of male to female ratio between rural Whites and urban Hispanic (urban Hispanic having the lower ratio) suggests that the stress for urban Hispanic might be higher over time, and could further indicate that the discrimination against Hispanics has been increasing in severity over time.
 
+
 \pagebreak
-## 4.
+## Question 1.4
 
 *Write a short report addressing the following hypothesis: The election of Trump in November 2016 had a noticeable effect on the sex ratio of Hispanic-Americans roughly 5 months after the election.*
 
@@ -374,7 +379,7 @@ points(x$Hubei[, c('time', 'deaths')], col = 'red')
 
 
 \pagebreak
-## 1.
+## Question 2.1
 
 *Write down the statistical model corresponding to the gamm4 calls above, explaining in words what all of the variables are.*
 
@@ -436,7 +441,7 @@ The difference between the two models are
 
 
 \pagebreak
-## 2. 
+## Question 2.2
 
 *Write a paragraph describing, in non-technical terms, what information the data analysis presented here is providing. Write text suitable for a short ‘Research News’ article in a University of Toronto news publication, assuming the audience knows some basic statistics but not much about non-parametric modelling.*
 
@@ -456,7 +461,7 @@ If the COVID19 spread trend for Italy and Hubei are similar, we can say that Ita
 
 
 \pagebreak
-## 3.
+## Question 2.3
 
 *Explain, for each of the tests below, whether the test is a valid LR test and give reasons for your decision.*
 
@@ -498,17 +503,17 @@ nadiv::LRTest(logLik(Hubei2$mer), logLik(Hubei3), boundaryCorrect = TRUE)
 
 **Answer:**
 
-- `lmtest::lrtest(Hubei2$mer, gamHubei$mer)` is a valid LR test because `Hubei2` is nested within `gamHubei`. `Hubei2` is the special case when `gamHubei` removes the `weekday` covariate and uses mean instead.
+- `lmtest::lrtest(Hubei2$mer, gamHubei$mer)` is not a valid LR test because `gamHubei` is fitted with REML instead of ML, and we shouldn't test REML models with likelihood ratio tests. If it was fitted with ML, the test would be valid because `Hubei2` is nested within `gamHubei`. `Hubei2` is the special case when `gamHubei` removes the `weekday` covariate and uses mean instead.
 
-- `nadiv::LRTest(logLik(Hubei2$mer), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is not a valid LR test because although `Hubei2` is nested within `gamHubei`, we are not testing for the random effect. `gamHubei` and `Hubei2` contain the same random effects (smothing on `timeInt` and random effect of `timeIid`). `boundaryCorrect` should only be set to TRUE when we are testing for random effects.
+- `nadiv::LRTest(logLik(Hubei2$mer), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is not a valid LR test because `gamHubei` is fitted with REML instead of ML, and we shouldn't test REML models with likelihood ratio tests. Also, although `Hubei2` is nested within `gamHubei`, we are not testing for the random effect. `gamHubei` and `Hubei2` contain the same random effects (smothing on `timeInt` and random effect of `timeIid`). `boundaryCorrect` should only be set to TRUE when we are testing for random effects.
 
-- `lmtest::lrtest(Hubei3, gamHubei$mer)` is not a valid LR test because although `Hubei3` is nested within `gamHubei`, the difference between the two model is the random effect of `timeIid`. To test for the random effect being significant, it is better to use `nadiv::LRTest`.
+- `lmtest::lrtest(Hubei3, gamHubei$mer)` is not a valid LR test because `gamHubei` is fitted with REML instead of ML, and we shouldn't test REML models with likelihood ratio tests. Also, although `Hubei3` is nested within `gamHubei`, the difference between the two model is the random effect of `timeIid`. To test for the random effect being significant, it is better to use `nadiv::LRTest`.
 
-- `nadiv::LRTest(logLik(Hubei3), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is a valid LR test because `Hubei3` is nested within `gamHubei`. It is equivalent to setting the random effect `timeIid` to $0$ in gamHubei. by setting `boundaryCorrect = TRUE`, we are testing the significance for the random effect of `timeIid`.
+- `nadiv::LRTest(logLik(Hubei3), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is a not valid LR test because `gamHubei` is fitted with REML instead of ML, and we shouldn't test REML models with likelihood ratio tests. If it was fitted with ML, the test would be valid because `Hubei3` is nested within `gamHubei`. It is equivalent to setting the random effect `timeIid` to $0$ in gamHubei. By setting `boundaryCorrect = TRUE`, we are testing the significance for the random effect of `timeIid`.
 
-- `lmtest::lrtest(Hubei4, gamHubei$mer)` is not a valid LR test because although `Hubei4` is nested within `gamHubei`. It is equivalent to using straight lines as `f(timeInt)` in `gamHubei`. By testing the two models, we will be testing the significance of the smoothing, which is a random effect. To test for the random effect being significant, it is better to use `nadiv::LRTest`.
+- `lmtest::lrtest(Hubei4, gamHubei$mer)` is not a valid LR test because `gamHubei` is fitted with REML instead of ML, and we shouldn't test REML models with likelihood ratio tests. Also, although `Hubei4` is nested within `gamHubei`. It is equivalent to using straight lines as `f(timeInt)` in `gamHubei`. By testing the two models, we will be testing the significance of the smoothing, which is a random effect. To test for the random effect being significant, it is better to use `nadiv::LRTest`.
 
-- `nadiv::LRTest(logLik(Hubei4), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is a valid LR test because `Hubei4` is nested within `gamHubei`. It is equivalent to using straight lines as `f(timeInt)` in `gamHubei`. by setting `boundaryCorrect = TRUE`, we are testing the significance for smoothing on `timeInt`.
+- `nadiv::LRTest(logLik(Hubei4), logLik(gamHubei$mer), boundaryCorrect = TRUE)` is not a valid LR test because `gamHubei` is fitted with REML instead of ML, and we shouldn't test REML models with likelihood ratio tests. If it was fitted with ML, the test would be valid because `Hubei4` is nested within `gamHubei`. It is equivalent to using straight lines as `f(timeInt)` in `gamHubei`. by setting `boundaryCorrect = TRUE`, we are testing the significance for smoothing on `timeInt`.
 
 - `lmtest::lrtest(Hubei2$mer, Hubei3)` is not a valid LR test because `Hubei2` and `Hubei3` are not nested. `Hubei2` contains a random effect of `timeIid`, which `Hubei3` does not. `Hubei3` has `weekday` as one of its covariates, but `Hubei2` does not. Thus the two models are not nested, and the LR test is inappropriate.
 
